@@ -1,0 +1,1 @@
+dotnet ef migrations add SeedInitialData --project .\MoSmartPark.Services --startup-project .\MoSmartPark.WebAPI
