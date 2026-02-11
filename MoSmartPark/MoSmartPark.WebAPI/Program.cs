@@ -9,6 +9,42 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using DotNetEnv;
+
+// Load .env file if it exists (for local development)
+// In Docker, environment variables are provided by docker-compose
+try
+{
+    // Try multiple possible paths for .env file
+    var possibleEnvPaths = new[]
+    {
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),
+        Path.Combine(Directory.GetCurrentDirectory(), "..", ".env"),
+        Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env"),
+    };
+
+    bool envLoaded = false;
+    foreach (var envPath in possibleEnvPaths)
+    {
+        if (File.Exists(envPath))
+        {
+            Env.Load(envPath);
+            envLoaded = true;
+            break;
+        }
+    }
+
+    // If no .env file found in common locations, try default location
+    if (!envLoaded)
+    {
+        Env.Load();
+    }
+}
+catch (FileNotFoundException)
+{
+    // .env file not found - this is OK in Docker environments
+    // Environment variables will be provided by docker-compose
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,8 +67,23 @@ builder.Services.AddTransient<IStripePaymentService, StripePaymentService>();
 
 
 // Configure database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=.;Database=MoSmartParkDb;User Id=sa;Password=QWEasd123!;TrustServerCertificate=True;Trusted_Connection=True;";
+// Try to get connection string from configuration first
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// If not found (local development), build from .env variables with Trusted_Connection
+// In Docker, the full connection string is provided via docker-compose environment
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    var sqlServer = Environment.GetEnvironmentVariable("SQL__SERVER") ?? ".";
+    var sqlDatabase = Environment.GetEnvironmentVariable("SQL__DATABASE") ?? "MoSmartParkDb";
+    var sqlUser = Environment.GetEnvironmentVariable("SQL__USER") ?? "sa";
+    var sqlPassword = Environment.GetEnvironmentVariable("SQL__PASSWORD") ?? "";
+    
+    connectionString = $"Server={sqlServer};Database={sqlDatabase};User Id={sqlUser};Password={sqlPassword};TrustServerCertificate=True;Trusted_Connection=True;";
+}
+
 builder.Services.AddDatabaseServices(connectionString);
+
 
 // Add configuration
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);

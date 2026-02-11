@@ -12,7 +12,7 @@ using MoSmartPark.Services.Database;
 namespace MoSmartPark.Services.Migrations
 {
     [DbContext(typeof(MoSmartParkDbContext))]
-    [Migration("20260211132833_init")]
+    [Migration("20260211143633_init")]
     partial class init
     {
         /// <inheritdoc />
