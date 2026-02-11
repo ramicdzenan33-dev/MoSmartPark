@@ -11,6 +11,7 @@ namespace MoSmartPark.WebAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -68,6 +69,7 @@ namespace MoSmartPark.WebAPI.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
         [HttpPost("authenticate")]
         public async Task<ActionResult<UserResponse>> Authenticate([FromBody] UserLoginRequest request)
         {
