@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MoSmartPark.Services.Migrations
 {
     /// <inheritdoc />
-    public partial class SeedInitialData : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -310,6 +310,39 @@ namespace MoSmartPark.Services.Migrations
                         name: "FK_Reviews_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StripePayments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ReservationId = table.Column<int>(type: "int", nullable: true),
+                    StripePaymentIntentId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    StripeCustomerId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Currency = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PaymentMethod = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CustomerName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CustomerEmail = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    BillingAddress = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    BillingCity = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    BillingState = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    BillingCountry = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    BillingZipCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StripePayments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StripePayments_Reservations_ReservationId",
+                        column: x => x.ReservationId,
+                        principalTable: "Reservations",
                         principalColumn: "Id");
                 });
 
@@ -716,6 +749,16 @@ namespace MoSmartPark.Services.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_StripePayments_ReservationId",
+                table: "StripePayments",
+                column: "ReservationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StripePayments_StripePaymentIntentId",
+                table: "StripePayments",
+                column: "StripePaymentIntentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserRoles_RoleId",
                 table: "UserRoles",
                 column: "RoleId");
@@ -754,6 +797,9 @@ namespace MoSmartPark.Services.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Reviews");
+
+            migrationBuilder.DropTable(
+                name: "StripePayments");
 
             migrationBuilder.DropTable(
                 name: "UserRoles");

@@ -22,6 +22,7 @@ namespace MoSmartPark.Services.Database
         public DbSet<ReservationType> ReservationTypes { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<StripePayment> StripePayments { get; set; }
     
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -175,6 +176,16 @@ namespace MoSmartPark.Services.Database
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Note: ParkingNumber is intentionally NOT unique - multiple spots can have the same number
+
+            // Configure StripePayment entity
+            modelBuilder.Entity<StripePayment>()
+                .HasOne(sp => sp.Reservation)
+                .WithMany()
+                .HasForeignKey(sp => sp.ReservationId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<StripePayment>()
+                .HasIndex(sp => sp.StripePaymentIntentId);
 
             // Seed initial data
             modelBuilder.SeedData();
