@@ -4,6 +4,7 @@ import 'package:mosmartpark_desktop/model/reservation.dart';
 import 'package:mosmartpark_desktop/model/search_result.dart';
 import 'package:mosmartpark_desktop/providers/reservation_provider.dart';
 import 'package:mosmartpark_desktop/screens/reservation_details_screen.dart';
+import 'package:mosmartpark_desktop/services/pdf_report_service.dart';
 import 'package:mosmartpark_desktop/utils/base_pagination.dart';
 import 'package:mosmartpark_desktop/utils/base_table.dart';
 import 'package:provider/provider.dart';
@@ -29,6 +30,7 @@ class _ReservationListScreenState extends State<ReservationListScreen> {
   int _currentPage = 0;
   int _pageSize = 5;
   final List<int> _pageSizeOptions = [5, 10, 20, 50];
+  bool _isGeneratingPdf = false;
 
   Future<void> _performSearch({int? page, int? pageSize}) async {
     final int pageToFetch = page ?? _currentPage;
@@ -54,6 +56,57 @@ class _ReservationListScreenState extends State<ReservationListScreen> {
       _currentPage = pageToFetch;
       _pageSize = pageSizeToUse;
     });
+  }
+
+  Future<void> _downloadReservationsPdf() async {
+    setState(() => _isGeneratingPdf = true);
+    try {
+      // Fetch ALL reservations matching the current filters (no pagination limit)
+      final filter = <String, dynamic>{
+        'page': 0,
+        'pageSize': 999999,
+        'includeTotalCount': true,
+      };
+      if (startDateFrom != null) {
+        filter['startDateFrom'] = startDateFrom!.toIso8601String();
+      }
+      if (startDateTo != null) {
+        filter['startDateTo'] = startDateTo!.toIso8601String();
+      }
+
+      final allReservations = await reservationProvider.get(filter: filter);
+
+      if (allReservations.items == null || allReservations.items!.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No reservations to export.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      await PdfReportService.generateReservationsReport(
+        allReservations.items!,
+        startDateFrom: startDateFrom,
+        startDateTo: startDateTo,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error generating PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingPdf = false);
+      }
+    }
   }
 
   Future<void> _selectStartDateFrom(BuildContext context) async {
@@ -226,6 +279,42 @@ class _ReservationListScreenState extends State<ReservationListScreen> {
                     Text(
                       "Clear",
                       style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton(
+                onPressed: _isGeneratingPdf ? null : _downloadReservationsPdf,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8B6F47),
+                  foregroundColor: Colors.white,
+                  elevation: 3,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _isGeneratingPdf
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.picture_as_pdf, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      _isGeneratingPdf ? "Generating..." : "Download PDF",
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),

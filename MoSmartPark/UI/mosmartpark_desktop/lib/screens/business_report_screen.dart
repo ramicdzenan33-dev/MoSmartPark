@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mosmartpark_desktop/layouts/master_screen.dart';
 import 'package:mosmartpark_desktop/model/business_report.dart';
 import 'package:mosmartpark_desktop/providers/business_report_provider.dart';
+import 'package:mosmartpark_desktop/services/pdf_report_service.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -182,13 +183,20 @@ class _BusinessReportScreenState extends State<BusinessReportScreen> {
             children: [
               Icon(Icons.bar_chart, color: _brownPrimary, size: 28),
               const SizedBox(width: 12),
-              Text(
-                'Overall Statistics',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: _brownPrimary,
+              Expanded(
+                child: Text(
+                  'Overall Statistics',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: _brownPrimary,
+                  ),
                 ),
+              ),
+              _buildPdfDownloadButton(
+                label: 'Download PDF Report',
+                icon: Icons.picture_as_pdf,
+                onPressed: () => _downloadBusinessReportPdf(),
               ),
             ],
           ),
@@ -1189,6 +1197,42 @@ class _BusinessReportScreenState extends State<BusinessReportScreen> {
                 }),
               ],
             ),
+    );
+  }
+
+  Future<void> _downloadBusinessReportPdf() async {
+    try {
+      await PdfReportService.generateBusinessReport(report!);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error generating PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildPdfDownloadButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _brownPrimary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        elevation: 3,
+      ),
     );
   }
 
