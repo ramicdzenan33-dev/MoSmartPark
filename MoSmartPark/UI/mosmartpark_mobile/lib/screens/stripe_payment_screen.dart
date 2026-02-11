@@ -5,10 +5,11 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mosmartpark_mobile/model/car.dart';
 import 'package:mosmartpark_mobile/model/parking_spot.dart';
 import 'package:mosmartpark_mobile/model/reservation_type.dart';
+import 'package:mosmartpark_mobile/providers/base_provider.dart';
+import 'package:mosmartpark_mobile/providers/auth_provider.dart';
 import 'package:mosmartpark_mobile/providers/reservation_provider.dart';
 import 'package:mosmartpark_mobile/providers/user_provider.dart';
 import 'package:mosmartpark_mobile/layouts/master_screen.dart';
@@ -43,7 +44,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
   bool _isLoading = false;
   bool _paymentCompleted = false;
   int? _generatedReservationId;
-  bool _isUsingMockPayment = false;
+  int? _stripePaymentId;
 
   // MoSmartPark color scheme
   static const Color primaryColor = Color(0xFF8B6F47);
@@ -739,175 +740,122 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
     );
   }
 
-  // Stripe Payment Methods
-  Future<void> _initPaymentSheet(Map<String, dynamic> formData) async {
-    try {
-      final data = await _createPaymentIntent(
-        amount: (widget.price * 100).round().toString(),
-        currency: 'USD',
-        name: formData['name'] ?? 'John Doe',
-        address: formData['address'] ?? '123 Main Street',
-        pin: formData['pincode'] ?? '10001',
-        city: formData['city'] ?? 'New York',
-        state: formData['state'] ?? 'NY',
-        country: formData['country'] ?? 'United States',
-      );
-
-      // Check if we're using mock data (mock secrets don't work with Stripe)
-      final isMock = data['client_secret'].toString().contains('mock');
-      _isUsingMockPayment = isMock;
-      
-      if (isMock) {
-        // For mock data, skip Stripe initialization and go straight to reservation creation
-        // This allows testing without a valid Stripe key
-        print('Using mock payment intent - skipping Stripe payment sheet');
-        return;
-      }
-
-      await stripe.Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: stripe.SetupPaymentSheetParameters(
-          customFlow: false,
-          merchantDisplayName: 'Mo Smart Park',
-          paymentIntentClientSecret: data['client_secret'],
-          customerEphemeralKeySecret: data['ephemeralKey'],
-          customerId: data['id'],
-          style: ThemeMode.light,
-        ),
-      );
-    } catch (e) {
-      print('Error initializing payment sheet: $e');
-      rethrow;
-    }
+  // Helper to build auth headers for backend API calls
+  Map<String, String> _createApiHeaders() {
+    final username = AuthProvider.username ?? "";
+    final password = AuthProvider.password ?? "";
+    final basicAuth = "Basic ${base64Encode(utf8.encode('$username:$password'))}";
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': basicAuth,
+    };
   }
 
+  // Creates a PaymentIntent via the backend API (server-side Stripe integration)
   Future<Map<String, dynamic>> _createPaymentIntent({
-    required String amount,
-    required String currency,
     required String name,
+    required String email,
     required String address,
     required String pin,
     required String city,
     required String state,
     required String country,
   }) async {
-    try {
-      // Use test/demo Stripe secret key (for development)
-      final secretKey = dotenv.env['STRIPE_SECRET_KEY'] ?? 
-          'sk_test_51QJ8XxExampleKeyForDemoPurposesOnly'; // Demo key
+    final baseUrl = BaseProvider.baseUrl;
+    final headers = _createApiHeaders();
 
-      // Create customer
-      final customerResponse = await http.post(
-        Uri.parse('https://api.stripe.com/v1/customers'),
-        headers: {
-          'Authorization': 'Bearer $secretKey',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: {
-          'name': name,
-          'email': UserProvider.currentUser?.email ?? 'demo@mosmartpark.com',
-          'metadata[address]': address,
-          'metadata[city]': city,
-          'metadata[state]': state,
-          'metadata[country]': country,
-        },
-      );
+    final response = await http.post(
+      Uri.parse('${baseUrl}StripePayment/create-payment-intent'),
+      headers: headers,
+      body: jsonEncode({
+        'amount': widget.price,
+        'currency': 'USD',
+        'customerName': name,
+        'customerEmail': email,
+        'billingAddress': address,
+        'billingCity': city,
+        'billingState': state,
+        'billingCountry': country,
+        'billingZipCode': pin,
+      }),
+    );
 
-      if (customerResponse.statusCode != 200) {
-        return _createMockPaymentIntent(amount, currency);
-      }
-
-      final customerData = jsonDecode(customerResponse.body);
-      final customerId = customerData['id'];
-
-      // Create ephemeral key
-      final ephemeralKeyResponse = await http.post(
-        Uri.parse('https://api.stripe.com/v1/ephemeral_keys'),
-        headers: {
-          'Authorization': 'Bearer $secretKey',
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Stripe-Version': '2023-10-16',
-        },
-        body: {'customer': customerId},
-      );
-
-      if (ephemeralKeyResponse.statusCode != 200) {
-        return _createMockPaymentIntent(amount, currency);
-      }
-
-      final ephemeralKeyData = jsonDecode(ephemeralKeyResponse.body);
-
-      // Create payment intent
-      final paymentIntentResponse = await http.post(
-        Uri.parse('https://api.stripe.com/v1/payment_intents'),
-        headers: {
-          'Authorization': 'Bearer $secretKey',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: {
-          'amount': amount,
-          'currency': currency.toLowerCase(),
-          'customer': customerId,
-          'payment_method_types[]': 'card',
-          'description': 'Mo Smart Park Parking Reservation',
-          'metadata[name]': name,
-          'metadata[address]': address,
-          'metadata[city]': city,
-          'metadata[state]': state,
-          'metadata[country]': country,
-        },
-      );
-
-      if (paymentIntentResponse.statusCode == 200) {
-        final paymentIntentData = jsonDecode(paymentIntentResponse.body);
-        return {
-          'client_secret': paymentIntentData['client_secret'],
-          'ephemeralKey': ephemeralKeyData['secret'],
-          'id': customerId,
-          'amount': amount,
-          'currency': currency,
-        };
-      } else {
-        return _createMockPaymentIntent(amount, currency);
-      }
-    } catch (e) {
-      // For demo purposes, return mock data if Stripe API fails
-      return _createMockPaymentIntent(amount, currency);
+    if (response.statusCode < 300) {
+      return jsonDecode(response.body);
+    } else {
+      final errorBody = jsonDecode(response.body);
+      throw Exception(errorBody['error'] ?? 'Failed to create payment intent');
     }
   }
 
-  // Mock payment intent for demo purposes
-  Map<String, dynamic> _createMockPaymentIntent(String amount, String currency) {
-    return {
-      'client_secret': 'pi_mock_${DateTime.now().millisecondsSinceEpoch}_secret_mock',
-      'ephemeralKey': 'ek_mock_${DateTime.now().millisecondsSinceEpoch}',
-      'id': 'cus_mock_${DateTime.now().millisecondsSinceEpoch}',
-      'amount': amount,
-      'currency': currency,
-    };
+  // Initializes Stripe payment sheet with data from the backend
+  Future<void> _initPaymentSheet(Map<String, dynamic> formData) async {
+    final data = await _createPaymentIntent(
+      name: formData['name'] ?? 'John Doe',
+      email: UserProvider.currentUser?.email ?? '',
+      address: formData['address'] ?? '',
+      pin: formData['pincode'] ?? '',
+      city: formData['city'] ?? '',
+      state: formData['state'] ?? '',
+      country: formData['country'] ?? '',
+    );
+
+    // Store the backend payment ID for later confirmation
+    _stripePaymentId = data['stripePaymentId'];
+
+    await stripe.Stripe.instance.initPaymentSheet(
+      paymentSheetParameters: stripe.SetupPaymentSheetParameters(
+        customFlow: false,
+        merchantDisplayName: 'Mo Smart Park',
+        paymentIntentClientSecret: data['clientSecret'],
+        customerEphemeralKeySecret: data['ephemeralKey'],
+        customerId: data['customerId'],
+        style: ThemeMode.light,
+      ),
+    );
+  }
+
+  // Confirms the payment on the backend after successful Stripe payment
+  Future<void> _confirmPaymentOnBackend(int stripePaymentId, int reservationId) async {
+    final baseUrl = BaseProvider.baseUrl;
+    final headers = _createApiHeaders();
+
+    final response = await http.put(
+      Uri.parse('${baseUrl}StripePayment/$stripePaymentId/confirm'),
+      headers: headers,
+      body: jsonEncode({
+        'reservationId': reservationId,
+      }),
+    );
+
+    if (response.statusCode >= 300) {
+      print('Warning: Failed to confirm payment on backend: ${response.body}');
+    }
   }
 
   Future<void> _processStripePayment(Map<String, dynamic> formData) async {
     setState(() => _isLoading = true);
 
     try {
+      // 1. Create PaymentIntent via backend (server-side)
       await _initPaymentSheet(formData);
-      
-      // Only present payment sheet if we're not using mock data
-      if (!_isUsingMockPayment) {
-        // Present payment sheet
-        await stripe.Stripe.instance.presentPaymentSheet();
-      } else {
-        print('Demo mode: Skipping Stripe payment sheet presentation');
+
+      // 2. Present Stripe payment sheet to the user
+      await stripe.Stripe.instance.presentPaymentSheet();
+
+      // 3. Payment succeeded - create reservation
+      final reservation = await _createReservation();
+      final reservationId = reservation['id'] as int;
+
+      // 4. Confirm payment on backend and link to reservation
+      if (_stripePaymentId != null) {
+        await _confirmPaymentOnBackend(_stripePaymentId!, reservationId);
       }
 
-      // Create reservation after successful payment (or in demo mode)
-      await _createReservation();
-
       _showSuccessSnackbar('Payment successful!');
-      
-      // Navigate directly to home screen after successful payment
+
+      // Navigate to home screen after successful payment
       if (mounted) {
-        // Small delay to show success message
         await Future.delayed(const Duration(milliseconds: 800));
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
@@ -924,7 +872,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
       }
     } on stripe.StripeException catch (e) {
       setState(() => _isLoading = false);
-      
+
       if (e.error.code == 'canceled') {
         _showInfoSnackbar('Payment was canceled');
       } else {
@@ -932,60 +880,32 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      
+
       final errorMessage = e.toString().toLowerCase();
       if (errorMessage.contains('canceled') || errorMessage.contains('user canceled')) {
         _showInfoSnackbar('Payment was canceled');
       } else {
-        // For demo: if Stripe fails, still create reservation (for testing)
-        try {
-          await _createReservation();
-          _showSuccessSnackbar('Reservation created successfully (demo mode)');
-          
-          // Navigate directly to home screen after successful reservation creation
-          if (mounted) {
-            // Small delay to show success message
-            await Future.delayed(const Duration(milliseconds: 800));
-            if (mounted) {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const MasterScreen(
-                    child: HomeScreen(),
-                    title: 'Mo Smart Park',
-                  ),
-                  settings: const RouteSettings(name: 'MasterScreen'),
-                ),
-                (route) => route.isFirst,
-              );
-            }
-          }
-        } catch (reservationError) {
-          _showErrorSnackbar('Payment failed: ${e.toString()}');
-        }
+        _showErrorSnackbar('Payment failed: ${e.toString()}');
       }
     }
   }
 
   Future<Map<String, dynamic>> _createReservation() async {
-    try {
-      final reservationProvider = Provider.of<ReservationProvider>(context, listen: false);
-      
-      final request = {
-        'carId': widget.selectedCar.id,
-        'parkingSpotId': widget.selectedSpot.id,
-        'reservationTypeId': widget.selectedReservationType.id,
-        'startDate': widget.startDate.toIso8601String(),
-        'endDate': widget.endDate.toIso8601String(),
-      };
+    final reservationProvider = Provider.of<ReservationProvider>(context, listen: false);
 
-      final reservation = await reservationProvider.insert(request);
+    final request = {
+      'carId': widget.selectedCar.id,
+      'parkingSpotId': widget.selectedSpot.id,
+      'reservationTypeId': widget.selectedReservationType.id,
+      'startDate': widget.startDate.toIso8601String(),
+      'endDate': widget.endDate.toIso8601String(),
+    };
 
-      return {
-        'id': reservation.id,
-      };
-    } catch (e) {
-      throw Exception('Failed to create reservation: $e');
-    }
+    final reservation = await reservationProvider.insert(request);
+
+    return {
+      'id': reservation.id,
+    };
   }
 
   void _showSuccessSnackbar(String message) {
