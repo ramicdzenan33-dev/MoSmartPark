@@ -62,6 +62,7 @@ services:
       - RABBITMQ_PASSWORD=${RABBITMQ__PASSWORD}
       - RABBITMQ_VIRTUALHOST=/
       - STRIPE__SECRET_KEY=${STRIPE__SECRET_KEY}
+      - TZ=Europe/Zagreb
     ports:
       - "5130:5130"
     networks:
