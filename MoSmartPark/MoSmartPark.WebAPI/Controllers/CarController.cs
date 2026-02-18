@@ -9,8 +9,15 @@ namespace MoSmartPark.WebAPI.Controllers
 {
     public class CarController : BaseCRUDController<CarResponse, CarSearchObject, CarUpsertRequest, CarUpsertRequest>
     {
-        public CarController(ICarService service) : base(service)
+        private readonly ICarService _carService;
+        private readonly INotificationService _notificationService;
+        private readonly IUserService _userService;
+
+        public CarController(ICarService service, INotificationService notificationService, IUserService userService) : base(service)
         {
+            _carService = service;
+            _notificationService = notificationService;
+            _userService = userService;
         }
 
         [AllowAnonymous]
@@ -23,6 +30,65 @@ namespace MoSmartPark.WebAPI.Controllers
         public override async Task<CarResponse?> GetById(int id)
         {
             return await base.GetById(id);
+        }
+
+        [HttpPost]
+        public override async Task<CarResponse> Create([FromBody] CarUpsertRequest request)
+        {
+            var car = await base.Create(request);
+
+            // Send notification to all admins
+            var adminSearch = new UserSearchObject { RetrieveAll = true };
+            var admins = await _userService.GetAsync(adminSearch);
+            
+            foreach (var admin in admins.Items ?? new List<UserResponse>())
+            {
+                var hasAdminRole = admin.Roles?.Any(r => r.Name == "Administrator") ?? false;
+                if (hasAdminRole)
+                {
+                    await _notificationService.CreateNotificationAsync(
+                        admin.Id,
+                        "new_car",
+                        "New Car Registered",
+                        $"A new car has been registered: {car.BrandName} {car.Model} ({car.LicensePlate}).",
+                        "Car",
+                        car.Id
+                    );
+                }
+            }
+
+            return car;
+        }
+
+        [HttpPut("{id}")]
+        public override async Task<CarResponse?> Update(int id, [FromBody] CarUpsertRequest request)
+        {
+            var car = await base.Update(id, request);
+
+            if (car != null)
+            {
+                // Send notification to all admins
+                var adminSearch = new UserSearchObject { RetrieveAll = true };
+                var admins = await _userService.GetAsync(adminSearch);
+                
+                foreach (var admin in admins.Items ?? new List<UserResponse>())
+                {
+                    var hasAdminRole = admin.Roles?.Any(r => r.Name == "Administrator") ?? false;
+                    if (hasAdminRole)
+                    {
+                        await _notificationService.CreateNotificationAsync(
+                            admin.Id,
+                            "car_updated",
+                            "Car Information Updated",
+                            $"Car information updated: {car.BrandName} {car.Model} ({car.LicensePlate}).",
+                            "Car",
+                            car.Id
+                        );
+                    }
+                }
+            }
+
+            return car;
         }
     }
 }

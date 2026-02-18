@@ -23,6 +23,7 @@ namespace MoSmartPark.Services.Database
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<StripePayment> StripePayments { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
     
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -186,6 +187,19 @@ namespace MoSmartPark.Services.Database
 
             modelBuilder.Entity<StripePayment>()
                 .HasIndex(sp => sp.StripePaymentIntentId);
+
+            // Configure Notification entity
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Notification>()
+                .HasIndex(n => new { n.UserId, n.IsRead });
+
+            modelBuilder.Entity<Notification>()
+                .HasIndex(n => n.CreatedAt);
 
             // Seed initial data
             modelBuilder.SeedData();

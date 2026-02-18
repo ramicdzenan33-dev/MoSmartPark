@@ -13,6 +13,7 @@ import 'package:mosmartpark_desktop/screens/parking_spot_type_list_screen.dart';
 import 'package:mosmartpark_desktop/screens/parking_zone_list_screen.dart';
 import 'package:mosmartpark_desktop/screens/parking_watch_screen.dart';
 import 'package:mosmartpark_desktop/screens/business_report_screen.dart';
+import 'package:mosmartpark_desktop/widgets/notification_icon_button.dart';
 
 class MasterScreen extends StatefulWidget {
   const MasterScreen({
@@ -80,7 +81,7 @@ class _MasterScreenState extends State<MasterScreen>
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                  color: const Color(0xFF8B6F47).withOpacity(0.12),
+                color: const Color(0xFF8B6F47).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -133,7 +134,8 @@ class _MasterScreenState extends State<MasterScreen>
           ],
         ),
         actions: [
-          // Profile moved to drawer header
+          // Notifications icon button
+          const NotificationIconButton(),
         ],
       ),
       drawer: Drawer(
@@ -193,142 +195,135 @@ class _MasterScreenState extends State<MasterScreen>
     );
   }
 
- 
+  Widget _buildDrawerHeader() {
+    final user = UserProvider.currentUser;
+    final double radius = 28;
+    ImageProvider? imageProvider;
 
-Widget _buildDrawerHeader() {
-  final user = UserProvider.currentUser;
-  final double radius = 28;
-  ImageProvider? imageProvider;
-
-  if (user?.picture != null && user!.picture!.isNotEmpty) {
-    try {
-      final sanitized = user.picture!.replaceAll(
-        RegExp(r'^data:image/[^;]+;base64,'),
-        '',
-      );
-      final bytes = base64Decode(sanitized);
-      imageProvider = MemoryImage(bytes);
-    } catch (_) {
-      imageProvider = null;
+    if (user?.picture != null && user!.picture!.isNotEmpty) {
+      try {
+        final sanitized = user.picture!.replaceAll(
+          RegExp(r'^data:image/[^;]+;base64,'),
+          '',
+        );
+        final bytes = base64Decode(sanitized);
+        imageProvider = MemoryImage(bytes);
+      } catch (_) {
+        imageProvider = null;
+      }
     }
-  }
 
-  return Container(
-    padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          const Color(0xFF8B6F47).withOpacity(0.2),
-          const Color(0xFF8B6F47).withOpacity(0.1),
-        ],
+    return Container(
+      padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF8B6F47).withOpacity(0.2),
+            const Color(0xFF8B6F47).withOpacity(0.1),
+          ],
+        ),
+        borderRadius: const BorderRadius.only(topRight: Radius.circular(28)),
       ),
-      borderRadius: const BorderRadius.only(
-        topRight: Radius.circular(28),
-      ),
-    ),
-    child: Row(
-      children: [
-        ClipOval(
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: const Color(0xFF8B6F47).withOpacity(0.2),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFF8B6F47).withOpacity(0.4),
-                width: 2,
+      child: Row(
+        children: [
+          ClipOval(
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF8B6F47).withOpacity(0.2),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFF8B6F47).withOpacity(0.4),
+                  width: 2,
+                ),
               ),
-            ),
-            child: CircleAvatar(
-              radius: radius,
-              backgroundColor: const Color(0xFF8B6F47),
-              backgroundImage: imageProvider,
-              child: imageProvider == null
-                  ? Text(
-                      _getUserInitials(user?.firstName, user?.lastName),
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    )
-                  : null,
+              child: CircleAvatar(
+                radius: radius,
+                backgroundColor: const Color(0xFF8B6F47),
+                backgroundImage: imageProvider,
+                child: imageProvider == null
+                    ? Text(
+                        _getUserInitials(user?.firstName, user?.lastName),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      )
+                    : null,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                user != null
-                    ? '${user.firstName} ${user.lastName}'
-                    : 'Guest',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  user != null ? '${user.firstName} ${user.lastName}' : 'Guest',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                user?.username ?? 'Admin',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0.2,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8B6F47).withOpacity(0.25),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: const Color(0xFF8B6F47).withOpacity(0.5),
-                    width: 1,
+                Text(
+                  user?.username ?? 'Admin',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.2,
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(
-                      Icons.verified_user,
-                      size: 14,
-                      color: Color(0xFF8B6F47),
+                const SizedBox(height: 2),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B6F47).withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF8B6F47).withOpacity(0.5),
+                      width: 1,
                     ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Administrator',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.verified_user,
+                        size: 14,
                         color: Color(0xFF8B6F47),
-                        letterSpacing: 0.3,
                       ),
-                    ),
-                  ],
+                      SizedBox(width: 6),
+                      Text(
+                        'Administrator',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF8B6F47),
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
-
+        ],
+      ),
+    );
+  }
 
   Widget _buildFocusedNav(BuildContext context) {
     return SingleChildScrollView(
@@ -404,7 +399,7 @@ Widget _buildDrawerHeader() {
               screen: const BrandListScreen(),
             ),
             const SizedBox(height: 5),
-            
+
             // User Section
             _buildSectionHeader('User Section'),
             const SizedBox(height: 8),
@@ -416,7 +411,7 @@ Widget _buildDrawerHeader() {
               screen: const UsersListScreen(),
             ),
             const SizedBox(height: 5),
-            
+
             // Reviews tile (no section header)
             _modernDrawerTile(
               context,
@@ -426,7 +421,7 @@ Widget _buildDrawerHeader() {
               screen: ReviewListScreen(),
             ),
             const SizedBox(height: 5),
-            
+
             // Cities tile (no section header)
             _modernDrawerTile(
               context,
@@ -460,18 +455,13 @@ Widget _buildDrawerHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
       decoration: BoxDecoration(
-        borderRadius: const BorderRadius.only(
-          bottomRight: Radius.circular(28),
-        ),
+        borderRadius: const BorderRadius.only(bottomRight: Radius.circular(28)),
         color: Colors.black.withOpacity(0.08),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Divider(
-            color: Colors.white.withOpacity(0.18),
-            thickness: 1,
-          ),
+          Divider(color: Colors.white.withOpacity(0.18), thickness: 1),
           const SizedBox(height: 12),
           _modernLogoutTile(context),
         ],
@@ -479,8 +469,6 @@ Widget _buildDrawerHeader() {
     );
   }
 }
-
-
 
 Widget _modernDrawerTile(
   BuildContext context, {
@@ -570,7 +558,10 @@ Widget _modernDrawerTile(
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
             border: isSelected
-                ? Border.all(color: const Color(0xFF8B6F47).withOpacity(0.5), width: 1.5)
+                ? Border.all(
+                    color: const Color(0xFF8B6F47).withOpacity(0.5),
+                    width: 1.5,
+                  )
                 : null,
           ),
           child: Row(
@@ -633,7 +624,10 @@ Widget _modernLogoutTile(BuildContext context) {
           decoration: BoxDecoration(
             color: const Color(0xFF8B6F47).withOpacity(0.15),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF8B6F47).withOpacity(0.3), width: 1),
+            border: Border.all(
+              color: const Color(0xFF8B6F47).withOpacity(0.3),
+              width: 1,
+            ),
           ),
           child: const Row(
             children: [
