@@ -12,12 +12,14 @@ namespace MoSmartPark.WebAPI.Controllers
         private readonly ICarService _carService;
         private readonly INotificationService _notificationService;
         private readonly IUserService _userService;
+        private readonly IUserPreferencesService _userPreferencesService;
 
-        public CarController(ICarService service, INotificationService notificationService, IUserService userService) : base(service)
+        public CarController(ICarService service, INotificationService notificationService, IUserService userService, IUserPreferencesService userPreferencesService) : base(service)
         {
             _carService = service;
             _notificationService = notificationService;
             _userService = userService;
+            _userPreferencesService = userPreferencesService;
         }
 
         [AllowAnonymous]
@@ -37,24 +39,28 @@ namespace MoSmartPark.WebAPI.Controllers
         {
             var car = await base.Create(request);
 
-            // Send notification to all admins
+            // Notify admins who have "Cars" notifications enabled
             var adminSearch = new UserSearchObject { RetrieveAll = true };
             var admins = await _userService.GetAsync(adminSearch);
-            
+
             foreach (var admin in admins.Items ?? new List<UserResponse>())
             {
                 var hasAdminRole = admin.Roles?.Any(r => r.Name == "Administrator") ?? false;
-                if (hasAdminRole)
-                {
-                    await _notificationService.CreateNotificationAsync(
-                        admin.Id,
-                        "new_car",
-                        "New Car Registered",
-                        $"A new car has been registered: {car.BrandName} {car.Model} ({car.LicensePlate}).",
-                        "Car",
-                        car.Id
-                    );
-                }
+                if (!hasAdminRole)
+                    continue;
+
+                var prefs = await _userPreferencesService.GetByUserIdAsync(admin.Id);
+                if (!prefs.NotifyCars)
+                    continue;
+
+                await _notificationService.CreateNotificationAsync(
+                    admin.Id,
+                    "new_car",
+                    "New Car Registered",
+                    $"A new car has been registered: {car.BrandName} {car.Model} ({car.LicensePlate}).",
+                    "Car",
+                    car.Id
+                );
             }
 
             return car;
@@ -67,24 +73,27 @@ namespace MoSmartPark.WebAPI.Controllers
 
             if (car != null)
             {
-                // Send notification to all admins
                 var adminSearch = new UserSearchObject { RetrieveAll = true };
                 var admins = await _userService.GetAsync(adminSearch);
-                
+
                 foreach (var admin in admins.Items ?? new List<UserResponse>())
                 {
                     var hasAdminRole = admin.Roles?.Any(r => r.Name == "Administrator") ?? false;
-                    if (hasAdminRole)
-                    {
-                        await _notificationService.CreateNotificationAsync(
-                            admin.Id,
-                            "car_updated",
-                            "Car Information Updated",
-                            $"Car information updated: {car.BrandName} {car.Model} ({car.LicensePlate}).",
-                            "Car",
-                            car.Id
-                        );
-                    }
+                    if (!hasAdminRole)
+                        continue;
+
+                    var prefs = await _userPreferencesService.GetByUserIdAsync(admin.Id);
+                    if (!prefs.NotifyCars)
+                        continue;
+
+                    await _notificationService.CreateNotificationAsync(
+                        admin.Id,
+                        "car_updated",
+                        "Car Information Updated",
+                        $"Car information updated: {car.BrandName} {car.Model} ({car.LicensePlate}).",
+                        "Car",
+                        car.Id
+                    );
                 }
             }
 

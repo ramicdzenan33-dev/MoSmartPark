@@ -5,6 +5,7 @@ import 'package:mosmartpark_mobile/screens/cars_list_screen.dart';
 import 'package:mosmartpark_mobile/screens/review_list_screen.dart';
 import 'package:mosmartpark_mobile/screens/home_screen.dart';
 import 'package:mosmartpark_mobile/screens/my_reservations_screen.dart';
+import 'package:mosmartpark_mobile/screens/settings_screen.dart';
 
 class MasterScreen extends StatefulWidget {
   const MasterScreen({super.key, required this.child, required this.title});
@@ -45,6 +46,7 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
     const CarsListScreen(),
     const ReviewListScreen(),
     const ProfileScreen(),
+    const SettingsScreen(),
   ];
 
   @override
@@ -225,6 +227,8 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -250,11 +254,17 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF6B5B3D),
-                const Color(0xFF8B6F47),
-                const Color(0xFFA0826D),
-              ],
+              colors: isDark
+                  ? [
+                      const Color(0xFF1A120B),
+                      const Color(0xFF3C2A21),
+                      const Color(0xFF5C4033),
+                    ]
+                  : [
+                      const Color(0xFF6B5B3D),
+                      const Color(0xFF8B6F47),
+                      const Color(0xFFA0826D),
+                    ],
             ),
           ),
         ),
@@ -468,6 +478,12 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                         icon: _menuIcons[4],
                         title: _menuTitles[4],
                         delay: 200,
+                      ),
+                      _buildDrawerTile(
+                        index: 5,
+                        icon: _menuIcons[5],
+                        title: _menuTitles[5],
+                        delay: 250,
                       ),
                     ],
                   ),

@@ -22,30 +22,32 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = UserProvider.currentUser;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (user == null) {
+      final accentColor = isDark ? const Color(0xFFBFA27E) : const Color(0xFF8B6F47);
       return Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFFF8FAFC),
-              Colors.white,
-            ],
+            colors: isDark
+                ? [const Color(0xFF1A1A2E), const Color(0xFF16213E)]
+                : [const Color(0xFFF8FAFC), Colors.white],
           ),
         ),
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Color(0xFF8B6F47)),
-              SizedBox(height: 16),
+              Icon(Icons.error_outline, size: 64, color: accentColor),
+              const SizedBox(height: 16),
               Text(
                 'No user data available',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF8B6F47),
+                  color: accentColor,
                 ),
               ),
             ],
@@ -59,10 +61,9 @@ class ProfileScreen extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFFF8FAFC),
-            Colors.white,
-          ],
+          colors: isDark
+              ? [const Color(0xFF1A1A2E), const Color(0xFF16213E)]
+              : [const Color(0xFFF8FAFC), Colors.white],
         ),
       ),
       child: SingleChildScrollView(
@@ -74,14 +75,20 @@ class ProfileScreen extends StatelessWidget {
             // Profile Header Card with Brown Gradient
             Container(
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF6B5B3D),
-                    Color(0xFF8B6F47),
-                    Color(0xFFA0826D),
-                  ],
+                  colors: isDark
+                      ? [
+                          const Color(0xFF1A120B),
+                          const Color(0xFF3C2A21),
+                          const Color(0xFF5C4033),
+                        ]
+                      : [
+                          const Color(0xFF6B5B3D),
+                          const Color(0xFF8B6F47),
+                          const Color(0xFFA0826D),
+                        ],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
@@ -210,26 +217,27 @@ class ProfileScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+                      color: isDark ? Colors.white : Colors.grey[800],
                       letterSpacing: -0.3,
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 
-                // Information items in modern card design
-                _buildInfoTile(Icons.email_rounded, 'Email', user.email),
+                _buildInfoTile(Icons.email_rounded, 'Email', user.email, isDark),
                 _buildInfoTile(
                   Icons.phone_rounded,
                   'Phone',
                   user.phoneNumber ?? 'Not provided',
+                  isDark,
                 ),
                 _buildInfoTile(
                   Icons.person_outline_rounded,
                   'Gender',
                   user.genderName,
+                  isDark,
                 ),
-                _buildInfoTile(Icons.location_city_rounded, 'City', user.cityName),
+                _buildInfoTile(Icons.location_city_rounded, 'City', user.cityName, isDark),
               ],
             ),
           ],
@@ -238,15 +246,17 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String label, String value) {
+  Widget _buildInfoTile(IconData icon, String label, String value, bool isDark) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : Colors.grey.withOpacity(0.08),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -260,13 +270,13 @@ class ProfileScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF8B6F47).withOpacity(0.1),
+                color: const Color(0xFF8B6F47).withOpacity(isDark ? 0.2 : 0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 icon,
                 size: 24,
-                color: const Color(0xFF8B6F47),
+                color: isDark ? const Color(0xFFBFA27E) : const Color(0xFF8B6F47),
               ),
             ),
             const SizedBox(width: 16),
@@ -279,17 +289,17 @@ class ProfileScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey[600],
+                      color: isDark ? Colors.grey[500] : Colors.grey[600],
                       letterSpacing: 0.2,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     value,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1F2937),
+                      color: isDark ? Colors.white : const Color(0xFF1F2937),
                       letterSpacing: -0.2,
                     ),
                   ),

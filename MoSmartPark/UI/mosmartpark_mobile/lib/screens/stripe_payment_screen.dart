@@ -50,27 +50,32 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
   static const Color primaryColor = Color(0xFF8B6F47);
   static const Color primaryDark = Color(0xFF6B5B3D);
 
-  final commonDecoration = InputDecoration(
-    filled: true,
-    fillColor: Colors.white,
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12.0),
-      borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12.0),
-      borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12.0),
-      borderSide: const BorderSide(color: primaryColor, width: 2),
-    ),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-  );
+  InputDecoration _commonDecoration(bool isDark) {
+    return InputDecoration(
+      filled: true,
+      fillColor: isDark ? const Color(0xFF334155) : Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        borderSide: BorderSide(color: (isDark ? Colors.grey[600]! : Colors.grey).withOpacity(0.3)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        borderSide: BorderSide(color: (isDark ? Colors.grey[600]! : Colors.grey).withOpacity(0.3)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        borderSide: const BorderSide(color: primaryColor, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF1A1A2E) : null,
       appBar: AppBar(
         title: const Text(
           'Payment',
@@ -81,15 +86,21 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
           ),
         ),
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF6B5B3D),
-                primaryColor,
-                Color(0xFFA0826D),
-              ],
+              colors: isDark
+                  ? [
+                      const Color(0xFF1A120B),
+                      const Color(0xFF3C2A21),
+                      const Color(0xFF5C4033),
+                    ]
+                  : [
+                      const Color(0xFF6B5B3D),
+                      primaryColor,
+                      const Color(0xFFA0826D),
+                    ],
             ),
           ),
         ),
@@ -97,21 +108,21 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
         backgroundColor: primaryColor,
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                color: primaryColor,
               ),
             )
           : _paymentCompleted
-              ? _buildPaymentSuccessScreen()
+              ? _buildPaymentSuccessScreen(isDark)
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
-                  child: _buildPaymentForm(context),
+                  child: _buildPaymentForm(context, isDark),
                 ),
     );
   }
 
-  Widget _buildPaymentSuccessScreen() {
+  Widget _buildPaymentSuccessScreen(bool isDark) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -122,11 +133,11 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: primaryColor.withOpacity(0.15),
+                  color: isDark ? Colors.black.withOpacity(0.3) : primaryColor.withOpacity(0.15),
                   blurRadius: 30,
                   offset: const Offset(0, 15),
                 ),
@@ -154,10 +165,10 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
+                Text(
                   'Payment Successful!',
                   style: TextStyle(
-                    color: Color(0xFF1F2937),
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
                     fontWeight: FontWeight.bold,
                     fontSize: 28,
                     letterSpacing: -0.5,
@@ -168,7 +179,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
                 Text(
                   'Your parking reservation has been confirmed.',
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: isDark ? Colors.grey[300] : Colors.grey[600],
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
@@ -178,7 +189,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
                 Text(
                   'Reservation ID: ${_generatedReservationId ?? 'N/A'}',
                   style: TextStyle(
-                    color: Colors.grey[500],
+                    color: isDark ? Colors.grey[400] : Colors.grey[500],
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -191,7 +202,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
           const SizedBox(height: 24),
 
           // Reservation details card
-          _buildReservationDetailsCard(),
+          _buildReservationDetailsCard(isDark),
 
           const SizedBox(height: 32),
 
@@ -263,15 +274,15 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
     );
   }
 
-  Widget _buildReservationDetailsCard() {
+  Widget _buildReservationDetailsCard(bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: isDark ? Colors.black.withOpacity(0.3) : Colors.grey.withOpacity(0.1),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -280,12 +291,12 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Reservation Summary',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1F2937),
+              color: isDark ? Colors.white : const Color(0xFF1F2937),
             ),
           ),
           const SizedBox(height: 16),
@@ -300,22 +311,23 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
             ),
             child: Column(
               children: [
-                _buildSummaryRow('Car', '${widget.selectedCar.brandName} ${widget.selectedCar.model}'),
+                _buildSummaryRow('Car', '${widget.selectedCar.brandName} ${widget.selectedCar.model}', isDark: isDark),
                 const SizedBox(height: 12),
-                _buildSummaryRow('Spot', widget.selectedSpot.parkingNumber),
+                _buildSummaryRow('Spot', widget.selectedSpot.parkingNumber, isDark: isDark),
                 const SizedBox(height: 12),
-                _buildSummaryRow('Type', widget.selectedReservationType.name),
+                _buildSummaryRow('Type', widget.selectedReservationType.name, isDark: isDark),
                 const SizedBox(height: 12),
-                _buildSummaryRow('Start Date', DateFormat('MMM dd, yyyy HH:mm').format(widget.startDate)),
+                _buildSummaryRow('Start Date', DateFormat('MMM dd, yyyy HH:mm').format(widget.startDate), isDark: isDark),
                 const SizedBox(height: 12),
-                _buildSummaryRow('End Date', DateFormat('MMM dd, yyyy HH:mm').format(widget.endDate)),
+                _buildSummaryRow('End Date', DateFormat('MMM dd, yyyy HH:mm').format(widget.endDate), isDark: isDark),
                 const SizedBox(height: 12),
-                const Divider(),
+                Divider(color: isDark ? Colors.grey[600] : null),
                 const SizedBox(height: 12),
                 _buildSummaryRow(
                   'Total Amount',
                   '\$${widget.price.toStringAsFixed(2)}',
                   isTotal: true,
+                  isDark: isDark,
                 ),
               ],
             ),
@@ -324,7 +336,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
           Text(
             'Your parking spot is reserved. Show your ticket at the entrance to open the gate.',
             style: TextStyle(
-              color: Colors.grey[600],
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
               fontSize: 14,
               fontStyle: FontStyle.italic,
             ),
@@ -335,7 +347,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool isTotal = false}) {
+  Widget _buildSummaryRow(String label, String value, {bool isTotal = false, bool isDark = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -344,7 +356,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
           style: TextStyle(
             fontSize: isTotal ? 16 : 14,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
-            color: isTotal ? const Color(0xFF1F2937) : Colors.grey[700],
+            color: isTotal ? (isDark ? Colors.white : const Color(0xFF1F2937)) : (isDark ? Colors.grey[400] : Colors.grey[700]),
           ),
         ),
         Text(
@@ -352,14 +364,14 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
           style: TextStyle(
             fontSize: isTotal ? 20 : 14,
             fontWeight: FontWeight.bold,
-            color: isTotal ? primaryColor : const Color(0xFF1F2937),
+            color: isTotal ? primaryColor : (isDark ? Colors.white : const Color(0xFF1F2937)),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildPaymentForm(BuildContext context) {
+  Widget _buildPaymentForm(BuildContext context, bool isDark) {
     return FormBuilder(
       key: formKey,
       child: Column(
@@ -367,9 +379,9 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
         children: [
           _buildAmountCard(),
           const SizedBox(height: 24),
-          _buildReservationDetailsSection(),
+          _buildReservationDetailsSection(isDark),
           const SizedBox(height: 24),
-          _buildBillingSection(),
+          _buildBillingSection(isDark),
           const SizedBox(height: 32),
           _buildSubmitButton(context),
         ],
@@ -460,15 +472,15 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
     );
   }
 
-  Widget _buildReservationDetailsSection() {
+  Widget _buildReservationDetailsSection(bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: isDark ? Colors.black.withOpacity(0.3) : Colors.grey.withOpacity(0.1),
             blurRadius: 15,
             offset: const Offset(0, 6),
           ),
@@ -492,32 +504,32 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Reservation Details',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
-                  color: Color(0xFF1F2937),
+                  color: isDark ? Colors.white : const Color(0xFF1F2937),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildDetailRow('Car', '${widget.selectedCar.brandName} ${widget.selectedCar.model}'),
+          _buildDetailRow('Car', '${widget.selectedCar.brandName} ${widget.selectedCar.model}', isDark),
           const SizedBox(height: 12),
-          _buildDetailRow('Parking Spot', widget.selectedSpot.parkingNumber),
+          _buildDetailRow('Parking Spot', widget.selectedSpot.parkingNumber, isDark),
           const SizedBox(height: 12),
-          _buildDetailRow('Reservation Type', widget.selectedReservationType.name),
+          _buildDetailRow('Reservation Type', widget.selectedReservationType.name, isDark),
           const SizedBox(height: 12),
-          _buildDetailRow('Start Date', DateFormat('MMM dd, yyyy HH:mm').format(widget.startDate)),
+          _buildDetailRow('Start Date', DateFormat('MMM dd, yyyy HH:mm').format(widget.startDate), isDark),
           const SizedBox(height: 12),
-          _buildDetailRow('End Date', DateFormat('MMM dd, yyyy HH:mm').format(widget.endDate)),
+          _buildDetailRow('End Date', DateFormat('MMM dd, yyyy HH:mm').format(widget.endDate), isDark),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String value, bool isDark) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -527,7 +539,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
             label,
             style: TextStyle(
               fontSize: 13,
-              color: Colors.grey[700],
+              color: isDark ? Colors.grey[400] : Colors.grey[700],
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -536,10 +548,10 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
           flex: 3,
           child: Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1F2937),
+              color: isDark ? Colors.white : const Color(0xFF1F2937),
             ),
             textAlign: TextAlign.right,
           ),
@@ -548,15 +560,15 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
     );
   }
 
-  Widget _buildBillingSection() {
+  Widget _buildBillingSection(bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: isDark ? Colors.black.withOpacity(0.3) : Colors.grey.withOpacity(0.1),
             blurRadius: 15,
             offset: const Offset(0, 6),
           ),
@@ -580,12 +592,12 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Billing Information',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
-                  color: Color(0xFF1F2937),
+                  color: isDark ? Colors.white : const Color(0xFF1F2937),
                 ),
               ),
             ],
@@ -595,12 +607,14 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
             'name',
             'Full Name',
             initialValue: _getUserFullName(),
+            isDark: isDark,
           ),
           const SizedBox(height: 16),
           _buildTextField(
             'address',
             'Address',
             initialValue: '123 Main Street',
+            isDark: isDark,
           ),
           const SizedBox(height: 16),
           Row(
@@ -610,11 +624,12 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
                   'city',
                   'City',
                   initialValue: 'New York',
+                  isDark: isDark,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildTextField('state', 'State', initialValue: 'NY'),
+                child: _buildTextField('state', 'State', initialValue: 'NY', isDark: isDark),
               ),
             ],
           ),
@@ -626,6 +641,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
                   'country',
                   'Country',
                   initialValue: 'United States',
+                  isDark: isDark,
                 ),
               ),
               const SizedBox(width: 12),
@@ -636,6 +652,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
                   keyboardType: TextInputType.number,
                   isNumeric: true,
                   initialValue: '10001',
+                  isDark: isDark,
                 ),
               ),
             ],
@@ -659,13 +676,14 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
     TextInputType keyboardType = TextInputType.text,
     bool isNumeric = false,
     String? initialValue,
+    bool isDark = false,
   }) {
     return FormBuilderTextField(
       name: name,
       initialValue: initialValue,
-      decoration: commonDecoration.copyWith(
+      decoration: _commonDecoration(isDark).copyWith(
         labelText: labelText,
-        labelStyle: TextStyle(color: Colors.grey[600]),
+        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
       ),
       validator: isNumeric
           ? FormBuilderValidators.compose([

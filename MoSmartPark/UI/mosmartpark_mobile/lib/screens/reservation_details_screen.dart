@@ -138,9 +138,10 @@ class ReservationDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor();
     final statusText = _getStatusText();
-    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
           'Parking Ticket',
@@ -149,7 +150,7 @@ class ReservationDetailsScreen extends StatelessWidget {
             fontSize: 20,
           ),
         ),
-        backgroundColor: const Color(0xFF8B6F47),
+        backgroundColor: isDark ? const Color(0xFF2D1B0E) : const Color(0xFF8B6F47),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -161,11 +162,13 @@ class ReservationDetailsScreen extends StatelessWidget {
               // Main Ticket Card
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: isDark
+                          ? Colors.black.withOpacity(0.4)
+                          : Colors.black.withOpacity(0.12),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                       spreadRadius: 0,
@@ -186,7 +189,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                           Container(
                             height: 180,
                             width: double.infinity,
-                            color: Colors.grey[200],
+                            color: isDark ? const Color(0xFF334155) : Colors.grey[200],
                             child: _buildCarImage(
                               reservation.carPicture,
                               width: double.infinity,
@@ -357,7 +360,10 @@ class ReservationDetailsScreen extends StatelessWidget {
                     Container(
                       height: 20,
                       child: CustomPaint(
-                        painter: _DashedLinePainter(),
+                        painter: _DashedLinePainter(
+                          dashColor: isDark ? Colors.grey[600]! : Colors.grey[300]!,
+                          circleColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        ),
                         child: Container(),
                       ),
                     ),
@@ -372,11 +378,11 @@ class ReservationDetailsScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: isDark ? const Color(0xFF334155) : Colors.white,
                                 borderRadius: BorderRadius.circular(14),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
+                                    color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.08),
                                     blurRadius: 10,
                                     offset: const Offset(0, 2),
                                   ),
@@ -386,7 +392,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                                 data: reservation.qrCodeData!,
                                 version: QrVersions.auto,
                                 size: 140,
-                                backgroundColor: Colors.white,
+                                backgroundColor: isDark ? const Color(0xFF334155) : Colors.white,
                                 errorCorrectionLevel: QrErrorCorrectLevel.H,
                               ),
                             )
@@ -394,7 +400,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(30),
                               decoration: BoxDecoration(
-                                color: Colors.grey[100],
+                                color: isDark ? const Color(0xFF334155) : Colors.grey[100],
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Column(
@@ -402,14 +408,14 @@ class ReservationDetailsScreen extends StatelessWidget {
                                   Icon(
                                     Icons.qr_code_2_rounded,
                                     size: 60,
-                                    color: Colors.grey[400],
+                                    color: isDark ? Colors.grey[500] : Colors.grey[400],
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
                                     'QR Code not available',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey[600],
+                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -445,7 +451,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                                   'When you arrive at the entrance, show this ticket to the staff member. And the staff member will open the gate for you.',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Colors.grey[700],
+                                    color: isDark ? Colors.grey[300] : Colors.grey[700],
                                     height: 1.5,
                                   ),
                                 ),
@@ -460,7 +466,10 @@ class ReservationDetailsScreen extends StatelessWidget {
                     Container(
                       height: 20,
                       child: CustomPaint(
-                        painter: _DashedLinePainter(),
+                        painter: _DashedLinePainter(
+                          dashColor: isDark ? Colors.grey[600]! : Colors.grey[300]!,
+                          circleColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        ),
                         child: Container(),
                       ),
                     ),
@@ -474,16 +483,17 @@ class ReservationDetailsScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.grey[50],
+                              color: isDark ? const Color(0xFF334155) : Colors.grey[50],
                               borderRadius: BorderRadius.circular(18),
                               border: Border.all(
-                                color: Colors.grey[200]!,
+                                color: isDark ? Colors.grey[600]! : Colors.grey[200]!,
                                 width: 1,
                               ),
                             ),
                             child: Column(
                               children: [
                                 _buildModernInfoRow(
+                                  context,
                                   Icons.calendar_today_rounded,
                                   'Start',
                                   reservation.startDate != null
@@ -496,10 +506,11 @@ class ReservationDetailsScreen extends StatelessWidget {
                                 const SizedBox(height: 16),
                                 Container(
                                   height: 1,
-                                  color: Colors.grey[300],
+                                  color: isDark ? Colors.grey[600] : Colors.grey[300],
                                 ),
                                 const SizedBox(height: 16),
                                 _buildModernInfoRow(
+                                  context,
                                   Icons.event_available_rounded,
                                   'End',
                                   reservation.endDate != null
@@ -512,13 +523,14 @@ class ReservationDetailsScreen extends StatelessWidget {
                                 const SizedBox(height: 16),
                                 Container(
                                   height: 1,
-                                  color: Colors.grey[300],
+                                  color: isDark ? Colors.grey[600] : Colors.grey[300],
                                 ),
                                 const SizedBox(height: 16),
                                 Row(
                                   children: [
                                     Expanded(
                                       child: _buildCompactInfo(
+                                        context,
                                         Icons.local_parking_rounded,
                                         'Spot',
                                         '${reservation.parkingSpotNumber ?? 'N/A'}',
@@ -527,10 +539,11 @@ class ReservationDetailsScreen extends StatelessWidget {
                                     Container(
                                       width: 1,
                                       height: 40,
-                                      color: Colors.grey[300],
+                                      color: isDark ? Colors.grey[600] : Colors.grey[300],
                                     ),
                                     Expanded(
                                       child: _buildCompactInfo(
+                                        context,
                                         Icons.category_rounded,
                                         'Type',
                                         reservation.reservationTypeName ?? 'N/A',
@@ -540,10 +553,11 @@ class ReservationDetailsScreen extends StatelessWidget {
                                       Container(
                                         width: 1,
                                         height: 40,
-                                        color: Colors.grey[300],
+                                        color: isDark ? Colors.grey[600] : Colors.grey[300],
                                       ),
                                       Expanded(
                                         child: _buildCompactInfoWithColor(
+                                          context,
                                           reservation.parkingSpotTypeName!.toLowerCase().contains('electric')
                                               ? Icons.electric_car_rounded
                                               : reservation.parkingSpotTypeName!.toLowerCase().contains('handicap') || reservation.parkingSpotTypeName!.toLowerCase().contains('disabled')
@@ -634,7 +648,8 @@ class ReservationDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildModernInfoRow(IconData icon, String label, String date, String time) {
+  Widget _buildModernInfoRow(BuildContext context, IconData icon, String label, String date, String time) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         Container(
@@ -658,7 +673,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                 label.toUpperCase(),
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.grey[500],
+                  color: isDark ? Colors.grey[400] : Colors.grey[500],
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.2,
                 ),
@@ -668,10 +683,10 @@ class ReservationDetailsScreen extends StatelessWidget {
                 children: [
                   Text(
                     date,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1F2937),
+                      color: isDark ? Colors.white : const Color(0xFF1F2937),
                     ),
                   ),
                   if (time.isNotEmpty) ...[
@@ -680,16 +695,16 @@ class ReservationDetailsScreen extends StatelessWidget {
                       '•',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey[400],
+                        color: isDark ? Colors.grey[500] : Colors.grey[400],
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       time,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF8B6F47),
+                        color: Color(0xFF8B6F47),
                       ),
                     ),
                   ],
@@ -702,7 +717,8 @@ class ReservationDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCompactInfo(IconData icon, String label, String value) {
+  Widget _buildCompactInfo(BuildContext context, IconData icon, String label, String value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         Icon(
@@ -715,7 +731,7 @@ class ReservationDetailsScreen extends StatelessWidget {
           label.toUpperCase(),
           style: TextStyle(
             fontSize: 10,
-            color: Colors.grey[500],
+            color: isDark ? Colors.grey[400] : Colors.grey[500],
             fontWeight: FontWeight.w600,
             letterSpacing: 1,
           ),
@@ -723,10 +739,10 @@ class ReservationDetailsScreen extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
+            color: isDark ? Colors.white : const Color(0xFF1F2937),
           ),
           textAlign: TextAlign.center,
         ),
@@ -734,7 +750,8 @@ class ReservationDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCompactInfoWithColor(IconData icon, String label, String value, Color iconColor) {
+  Widget _buildCompactInfoWithColor(BuildContext context, IconData icon, String label, String value, Color iconColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         Icon(
@@ -747,7 +764,7 @@ class ReservationDetailsScreen extends StatelessWidget {
           label.toUpperCase(),
           style: TextStyle(
             fontSize: 10,
-            color: Colors.grey[500],
+            color: isDark ? Colors.grey[400] : Colors.grey[500],
             fontWeight: FontWeight.w600,
             letterSpacing: 1,
           ),
@@ -814,10 +831,18 @@ class ReservationDetailsScreen extends StatelessWidget {
 
 // Custom painter for dashed line (ticket stub effect)
 class _DashedLinePainter extends CustomPainter {
+  final Color dashColor;
+  final Color circleColor;
+
+  _DashedLinePainter({
+    this.dashColor = const Color(0xFFE5E7EB),
+    this.circleColor = const Color(0xFFF8FAFC),
+  });
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.grey[300]!
+      ..color = dashColor
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
@@ -836,7 +861,7 @@ class _DashedLinePainter extends CustomPainter {
 
     // Add semicircles on sides for ticket stub effect
     final circlePaint = Paint()
-      ..color = const Color(0xFFF8FAFC)
+      ..color = circleColor
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(Offset(0, size.height / 2), 10, circlePaint);

@@ -205,6 +205,8 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
         // Add Review Button
@@ -235,9 +237,13 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
         // Reviews List
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: const Color(0xFF8B6F47),
+                  ),
+                )
               : _reviews.isEmpty
-                  ? _buildEmptyState()
+                  ? _buildEmptyState(isDark)
                         : RefreshIndicator(
                       onRefresh: _loadReviews,
                       child: ListView.builder(
@@ -245,7 +251,7 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
                         itemCount: _reviews.length,
                         itemBuilder: (context, index) {
                           final review = _reviews[index];
-                          return _buildReviewCard(review);
+                          return _buildReviewCard(review, isDark);
                         },
                       ),
                     ),
@@ -254,7 +260,7 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(bool isDark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -262,7 +268,7 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
           Icon(
             Icons.rate_review_outlined,
             size: 64,
-            color: Colors.grey[400],
+            color: isDark ? Colors.grey[500] : Colors.grey[400],
           ),
           const SizedBox(height: 16),
           Text(
@@ -270,7 +276,7 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: isDark ? Colors.grey[300] : Colors.grey[600],
             ),
           ),
           const SizedBox(height: 8),
@@ -278,7 +284,7 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
             'Add your first review to get started',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[500],
+              color: isDark ? Colors.grey[400] : Colors.grey[500],
             ),
           ),
         ],
@@ -286,15 +292,15 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
     );
   }
 
-  Widget _buildReviewCard(Review review) {
+  Widget _buildReviewCard(Review review, bool isDark) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.08),
             blurRadius: 15,
             offset: const Offset(0, 4),
             spreadRadius: 0,
@@ -318,7 +324,7 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
                   Container(
                     height: 160,
                     width: double.infinity,
-                    color: Colors.grey[200],
+                    color: isDark ? const Color(0xFF334155) : Colors.grey[200],
                     child: _buildCarImage(
                       review.carPicture,
                       width: double.infinity,
@@ -428,7 +434,7 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
                           DateFormat('MMM dd, yyyy').format(review.createdAt),
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -442,7 +448,7 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark ? const Color(0xFF334155) : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: const Color(0xFF8B6F47).withOpacity(0.2),
@@ -450,7 +456,7 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
+                            color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.03),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -481,9 +487,9 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
                           const SizedBox(height: 8),
                           Text(
                             review.comment!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
-                              color: Color(0xFF1F2937),
+                              color: isDark ? Colors.grey[200] : const Color(0xFF1F2937),
                               fontWeight: FontWeight.w500,
                               height: 1.5,
                             ),

@@ -13,6 +13,7 @@ import 'package:mosmartpark_mobile/providers/gender_provider.dart';
 import 'package:mosmartpark_mobile/providers/reservation_provider.dart';
 import 'package:mosmartpark_mobile/providers/review_provider.dart';
 import 'package:mosmartpark_mobile/providers/user_provider.dart';
+import 'package:mosmartpark_mobile/providers/settings_provider.dart';
 import 'package:mosmartpark_mobile/screens/register_screen.dart';
 import 'package:mosmartpark_mobile/utils/base_textfield.dart';
 import 'package:mosmartpark_mobile/providers/reservation_type_provider.dart';
@@ -27,7 +28,6 @@ void main() async {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     print("Warning: Could not load .env file: $e");
-    // Continue without .env file - Stripe keys will be empty strings
   }
 
   stripe.Stripe.publishableKey = dotenv.env["STRIPE_PUBLISHABLE_KEY"] ?? "";
@@ -38,6 +38,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider<SettingsProvider>(create: (_) => SettingsProvider()),
         ChangeNotifierProvider<UserProvider>(create: (_) => UserProvider()),
         ChangeNotifierProvider<ReviewProvider>(create: (_) => ReviewProvider()),
         ChangeNotifierProvider<CityProvider>(create: (_) => CityProvider()),
@@ -59,18 +60,48 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  static final ThemeData lightTheme = ThemeData(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: const Color(0xFF8B6F47),
+      primary: const Color(0xFF8B6F47),
+      secondary: const Color(0xFF2D2D2D),
+      brightness: Brightness.light,
+    ),
+    useMaterial3: true,
+    scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF8B6F47),
+      foregroundColor: Colors.white,
+    ),
+  );
+
+  static final ThemeData darkTheme = ThemeData(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: const Color(0xFF8B6F47),
+      primary: const Color(0xFFBFA27E),
+      secondary: const Color(0xFFD4C4A8),
+      brightness: Brightness.dark,
+      surface: const Color(0xFF1A1A2E),
+    ),
+    useMaterial3: true,
+    scaffoldBackgroundColor: const Color(0xFF1A1A2E),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF2D1B0E),
+      foregroundColor: Colors.white,
+    ),
+    cardColor: const Color(0xFF1E293B),
+    dividerColor: Colors.white10,
+  );
+
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
     return MaterialApp(
       title: 'Mo Smart Park Mobile',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF8B6F47), // Warm brown
-          primary: const Color(0xFF8B6F47),
-          secondary: const Color(0xFF2D2D2D), // Light black
-        ),
-        useMaterial3: true,
-      ),
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: settings.themeMode,
       home: const LoginPage(),
       debugShowCheckedModeBanner: false,
     );
@@ -433,6 +464,7 @@ final TextEditingController usernameController = TextEditingController(text: "us
 
         if (hasStandardUserRole) {
           if (mounted) {
+            await context.read<SettingsProvider>().loadPreferences(user.id);
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(

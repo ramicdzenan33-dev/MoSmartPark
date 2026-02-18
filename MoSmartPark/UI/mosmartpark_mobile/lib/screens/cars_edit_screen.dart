@@ -237,18 +237,18 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
     super.dispose();
   }
 
-  Widget _buildImagePicker() {
+  Widget _buildImagePicker(bool isDark) {
     return GestureDetector(
       onTap: _pickImage,
       child: Container(
         width: double.infinity,
         height: 200,
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: isDark ? const Color(0xFF334155) : Colors.grey[200],
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.08),
               blurRadius: 15,
               offset: const Offset(0, 4),
               spreadRadius: 0,
@@ -322,7 +322,7 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
+                        color: isDark ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Row(
@@ -386,7 +386,10 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF1A1A2E) : null,
       appBar: AppBar(
         title: Text(
           widget.car != null ? 'Edit Car' : 'Add Car',
@@ -401,18 +404,28 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF6B5B3D),
-                const Color(0xFF8B6F47),
-                const Color(0xFFA0826D),
-              ],
+              colors: isDark
+                  ? [
+                      const Color(0xFF1A120B),
+                      const Color(0xFF3C2A21),
+                      const Color(0xFF5C4033),
+                    ]
+                  : [
+                      const Color(0xFF6B5B3D),
+                      const Color(0xFF8B6F47),
+                      const Color(0xFFA0826D),
+                    ],
             ),
           ),
         ),
         elevation: 0,
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                color: const Color(0xFF8B6F47),
+              ),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Form(
@@ -423,7 +436,7 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
                     const SizedBox(height: 20),
                     // Image Picker
                     Center(
-                      child: _buildImagePicker(),
+                      child: _buildImagePicker(isDark),
                     ),
                     const SizedBox(height: 32),
                     // Model
@@ -436,7 +449,7 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         filled: true,
-                        fillColor: Colors.grey[50],
+                        fillColor: isDark ? const Color(0xFF334155) : Colors.grey[50],
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -456,7 +469,7 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         filled: true,
-                        fillColor: Colors.grey[50],
+                        fillColor: isDark ? const Color(0xFF334155) : Colors.grey[50],
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -476,7 +489,7 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         filled: true,
-                        fillColor: Colors.grey[50],
+                        fillColor: isDark ? const Color(0xFF334155) : Colors.grey[50],
                       ),
                       keyboardType: TextInputType.number,
                       validator: (value) {
@@ -503,7 +516,7 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               filled: true,
-                              fillColor: Colors.grey[50],
+                              fillColor: isDark ? const Color(0xFF334155) : Colors.grey[50],
                             ),
                             items: brands.map((brand) {
                               return DropdownMenuItem<Brand>(
@@ -536,7 +549,7 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               filled: true,
-                              fillColor: Colors.grey[50],
+                              fillColor: isDark ? const Color(0xFF334155) : Colors.grey[50],
                             ),
                             items: colors.map((color) {
                               return DropdownMenuItem<model.CarColor>(
@@ -550,7 +563,7 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
                                         color: _parseColor(color.hexCode),
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color: Colors.grey[300]!,
+                                          color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
                                           width: 1,
                                         ),
                                       ),
@@ -579,10 +592,10 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.grey[50],
+                          color: isDark ? const Color(0xFF334155) : Colors.grey[50],
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Colors.grey[300]!,
+                            color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
                             width: 1,
                           ),
                         ),
@@ -614,7 +627,7 @@ class _CarsEditScreenState extends State<CarsEditScreen> {
                                           : 'Car is currently inactive',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey[600],
+                                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                                       ),
                                     ),
                                   ],

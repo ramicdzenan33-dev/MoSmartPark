@@ -108,8 +108,8 @@ namespace MoSmartPark.Services.Services
                 throw new InvalidOperationException("User not found.");
             }
 
-            entity.CreatedAt = DateTime.UtcNow;
-            entity.SentAt = DateTime.UtcNow;
+            entity.CreatedAt = DateTime.Now;
+            entity.SentAt = DateTime.Now;
             entity.IsSent = true;
         }
 
@@ -167,8 +167,8 @@ namespace MoSmartPark.Services.Services
                 RelatedEntityId = relatedEntityId,
                 IsRead = false,
                 IsSent = true,
-                CreatedAt = DateTime.UtcNow,
-                SentAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now,
+                SentAt = DateTime.Now
             };
 
             _context.Notifications.Add(notification);

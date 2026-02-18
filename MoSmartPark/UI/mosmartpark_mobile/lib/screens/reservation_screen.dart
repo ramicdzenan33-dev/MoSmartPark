@@ -8,6 +8,7 @@ import 'package:mosmartpark_mobile/providers/parking_spot_provider.dart';
 import 'package:mosmartpark_mobile/providers/parking_spot_type_provider.dart';
 import 'package:mosmartpark_mobile/providers/reservation_provider.dart';
 import 'package:mosmartpark_mobile/providers/user_provider.dart';
+import 'package:mosmartpark_mobile/providers/settings_provider.dart';
 import 'package:mosmartpark_mobile/model/car.dart';
 import 'package:mosmartpark_mobile/model/reservation_type.dart';
 import 'package:mosmartpark_mobile/model/parking_zone.dart';
@@ -116,7 +117,15 @@ class _ReservationScreenState extends State<ReservationScreen> {
         spotTypesMap = {for (var type in spotTypes) type.id: type};
 
         if (zones.isNotEmpty && selectedZone == null) {
-          selectedZone = zones.first;
+          final defaultZoneId = context.read<SettingsProvider>().defaultParkingZoneId;
+          if (defaultZoneId != null) {
+            selectedZone = zones.cast<ParkingZone?>().firstWhere(
+              (z) => z!.id == defaultZoneId,
+              orElse: () => null,
+            ) ?? zones.first;
+          } else {
+            selectedZone = zones.first;
+          }
         }
 
         isLoading = false;
@@ -463,29 +472,40 @@ class _ReservationScreenState extends State<ReservationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final content = _buildContent();
-    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final content = _buildContent(isDark);
+
     // Check if we're already inside a Scaffold (from MasterScreen)
     final scaffold = Scaffold.maybeOf(context);
     if (scaffold != null) {
       // Already in a Scaffold, return content directly
       return content;
     }
-    
+
     // Not in a Scaffold, wrap in one
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Reservation'),
+        title: Text(
+          'Create Reservation',
+          style: TextStyle(
+            color: isDark ? Colors.white : const Color(0xFF1F2937),
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
         backgroundColor: Colors.transparent,
+        foregroundColor: isDark ? Colors.white : const Color(0xFF1F2937),
         elevation: 0,
       ),
       body: content,
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(bool isDark) {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: CircularProgressIndicator(color: const Color(0xFF8B6F47)),
+      );
     }
 
     if (errorMessage != null && cars.isEmpty) {
@@ -502,12 +522,16 @@ class _ReservationScreenState extends State<ReservationScreen> {
             const SizedBox(height: 8),
             Text(
               errorMessage!,
-              style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+              style: TextStyle(fontSize: 14, color: isDark ? Colors.grey[400] : const Color(0xFF64748B)),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadData,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B6F47),
+                foregroundColor: Colors.white,
+              ),
               child: const Text('Retry'),
             ),
           ],
@@ -522,33 +546,33 @@ class _ReservationScreenState extends State<ReservationScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Car Selection
-          _buildSectionTitle("Select Car"),
-          _buildCarSelector(),
+          _buildSectionTitle("Select Car", isDark),
+          _buildCarSelector(isDark),
           const SizedBox(height: 24),
 
           // Reservation Type Selection
-          _buildSectionTitle("Reservation Type"),
-          _buildReservationTypeSelector(),
+          _buildSectionTitle("Reservation Type", isDark),
+          _buildReservationTypeSelector(isDark),
           const SizedBox(height: 24),
 
           // Date & Time Selection
-          _buildSectionTitle("Date & Time"),
-          _buildDateTimeSelector(),
+          _buildSectionTitle("Date & Time", isDark),
+          _buildDateTimeSelector(isDark),
           const SizedBox(height: 24),
 
           // Zone Selection
-          _buildSectionTitle("Parking Zone"),
-          _buildZoneSelector(),
+          _buildSectionTitle("Parking Zone", isDark),
+          _buildZoneSelector(isDark),
           const SizedBox(height: 24),
 
           // Parking Spots
-          _buildSectionTitle("Select Parking Spot"),
-          _buildParkingSpotsGrid(),
+          _buildSectionTitle("Select Parking Spot", isDark),
+          _buildParkingSpotsGrid(isDark),
           const SizedBox(height: 24),
 
           // Price Summary
           if (calculatedPrice != null) ...[
-            _buildPriceSummary(),
+            _buildPriceSummary(isDark),
             const SizedBox(height: 24),
           ],
 
@@ -560,32 +584,32 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF1F2937),
+          color: isDark ? Colors.white : const Color(0xFF1F2937),
         ),
       ),
     );
   }
 
-  Widget _buildCarSelector() {
+  Widget _buildCarSelector(bool isDark) {
     if (cars.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: isDark ? const Color(0xFF334155) : Colors.grey[100],
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             "No cars available. Please add a car first.",
-            style: TextStyle(color: Color(0xFF64748B)),
+            style: TextStyle(color: isDark ? Colors.grey[400] : const Color(0xFF64748B)),
           ),
         ),
       );
@@ -593,12 +617,12 @@ class _ReservationScreenState extends State<ReservationScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: isDark ? Colors.grey[600]! : const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -650,7 +674,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                             color: Colors.grey[200],
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.directions_car, size: 20),
+                          child: const Icon(Icons.directions_car, size: 20, color: Color(0xFF8B6F47)),
                         );
                       }
                     },
@@ -679,15 +703,15 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildReservationTypeSelector() {
+  Widget _buildReservationTypeSelector(bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: isDark ? Colors.grey[600]! : const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -718,7 +742,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   "\$${type.price.toStringAsFixed(2)}",
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
                   ),
                 ),
               ],
@@ -744,7 +768,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildDateTimeSelector() {
+  Widget _buildDateTimeSelector(bool isDark) {
     return Column(
       children: [
         // Start Date
@@ -753,12 +777,12 @@ class _ReservationScreenState extends State<ReservationScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: isDark ? Colors.grey[600]! : const Color(0xFFE2E8F0)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -772,11 +796,11 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         "Start Date & Time",
                         style: TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF64748B),
+                          color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -784,15 +808,16 @@ class _ReservationScreenState extends State<ReservationScreen> {
                         selectedStartDate != null
                             ? "${selectedStartDate!.day}/${selectedStartDate!.month}/${selectedStartDate!.year} ${selectedStartTime?.format(context) ?? ''}"
                             : "Select start date",
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : null,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.arrow_forward_ios, size: 16),
+                Icon(Icons.arrow_forward_ios, size: 16, color: isDark ? Colors.grey[400] : null),
               ],
             ),
           ),
@@ -806,12 +831,12 @@ class _ReservationScreenState extends State<ReservationScreen> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: isDark ? Colors.grey[600]! : const Color(0xFFE2E8F0)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -825,11 +850,11 @@ class _ReservationScreenState extends State<ReservationScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           "End Time",
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF64748B),
+                            color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -837,15 +862,16 @@ class _ReservationScreenState extends State<ReservationScreen> {
                           selectedEndTime != null
                               ? selectedEndTime!.format(context)
                               : "Select end time",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : null,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.arrow_forward_ios, size: 16),
+                  Icon(Icons.arrow_forward_ios, size: 16, color: isDark ? Colors.grey[400] : null),
                 ],
               ),
             ),
@@ -910,15 +936,15 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildZoneSelector() {
+  Widget _buildZoneSelector(bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: isDark ? Colors.grey[600]! : const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -962,36 +988,36 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildParkingSpotsGrid() {
+  Widget _buildParkingSpotsGrid(bool isDark) {
     if (selectedZone == null) {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: isDark ? const Color(0xFF334155) : Colors.grey[100],
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             "Please select a parking zone first",
-            style: TextStyle(color: Color(0xFF64748B)),
+            style: TextStyle(color: isDark ? Colors.grey[400] : const Color(0xFF64748B)),
           ),
         ),
       );
     }
 
     final zoneSpots = spots.where((s) => s.parkingZoneId == selectedZone!.id).toList();
-    
+
     if (zoneSpots.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: isDark ? const Color(0xFF334155) : Colors.grey[100],
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             "No parking spots available in this zone",
-            style: TextStyle(color: Color(0xFF64748B)),
+            style: TextStyle(color: isDark ? Colors.grey[400] : const Color(0xFF64748B)),
           ),
         ),
       );
@@ -1022,19 +1048,19 @@ class _ReservationScreenState extends State<ReservationScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Legend
-        _buildSpotTypeLegend(),
+        _buildSpotTypeLegend(isDark),
         const SizedBox(height: 16),
 
         // Parking spots grid
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: isDark ? Colors.grey[600]! : const Color(0xFFE2E8F0)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -1052,10 +1078,10 @@ class _ReservationScreenState extends State<ReservationScreen> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
                         "Row ${entry.key}",
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
+                          color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
                         ),
                       ),
                     ),
@@ -1064,7 +1090,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: entry.value.map((spot) {
-                        return _buildParkingSpotCard(spot);
+                        return _buildParkingSpotCard(spot, isDark);
                       }).toList(),
                     ),
                   ],
@@ -1077,16 +1103,16 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildSpotTypeLegend() {
+  Widget _buildSpotTypeLegend(bool isDark) {
     return Row(
       children: [
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: isDark ? const Color(0xFF334155) : Colors.grey[50],
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: isDark ? Colors.grey[600]! : const Color(0xFFE2E8F0)),
             ),
             child: Wrap(
               spacing: 16,
@@ -1108,9 +1134,9 @@ class _ReservationScreenState extends State<ReservationScreen> {
                     Flexible(
                       child: Text(
                         type.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF64748B),
+                          color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1136,10 +1162,12 @@ class _ReservationScreenState extends State<ReservationScreen> {
   }
 
   void _showReservationLegendPopup() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : null,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -1160,18 +1188,18 @@ class _ReservationScreenState extends State<ReservationScreen> {
                         size: 28,
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           "Reservation Guide",
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
+                            color: isDark ? Colors.white : const Color(0xFF1F2937),
                           ),
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: Icon(Icons.close, color: isDark ? Colors.grey[400] : null),
                         onPressed: () => Navigator.of(context).pop(),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -1184,32 +1212,13 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   _buildLegendSection(
                     "Spot Type Colors",
                     [
-                      _buildLegendItem(
-                        "Regular",
-                        _getSpotTypeColor(1, "Regular"),
-                        "Standard parking spot",
-                      ),
-                      _buildLegendItem(
-                        "Compact",
-                        _getSpotTypeColor(2, "Compact"),
-                        "For smaller vehicles (0.8x price)",
-                      ),
-                      _buildLegendItem(
-                        "Electric",
-                        _getSpotTypeColor(4, "Electric"),
-                        "With charging stations (1.3x price)",
-                      ),
-                      _buildLegendItem(
-                        "Disabled",
-                        _getSpotTypeColor(5, "Disabled"),
-                        "Accessible parking (0.7x price)",
-                      ),
-                      _buildLegendItem(
-                        "Large",
-                        _getSpotTypeColor(3, "Large"),
-                        "Spacious spots (1.5x price)",
-                      ),
+                      _buildLegendItem("Regular", _getSpotTypeColor(1, "Regular"), "Standard parking spot", isDark),
+                      _buildLegendItem("Compact", _getSpotTypeColor(2, "Compact"), "For smaller vehicles (0.8x price)", isDark),
+                      _buildLegendItem("Electric", _getSpotTypeColor(4, "Electric"), "With charging stations (1.3x price)", isDark),
+                      _buildLegendItem("Disabled", _getSpotTypeColor(5, "Disabled"), "Accessible parking (0.7x price)", isDark),
+                      _buildLegendItem("Large", _getSpotTypeColor(3, "Large"), "Spacious spots (1.5x price)", isDark),
                     ],
+                    isDark,
                   ),
                   const SizedBox(height: 20),
 
@@ -1217,32 +1226,13 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   _buildLegendSection(
                     "Spot Status",
                     [
-                      _buildLegendItem(
-                        "Available",
-                        const Color(0xFFE2E8F0),
-                        "Gray border - Spot is available for reservation",
-                      ),
-                      _buildLegendItem(
-                        "Recommended",
-                        const Color(0xFFD4AF37),
-                        "Golden border with star - AI recommended based on your preferences",
-                      ),
-                      _buildLegendItem(
-                        "Selected",
-                        const Color(0xFF10B981), // green color
-                        "Colored border - You selected this spot",
-                      ),
-                      _buildLegendItem(
-                        "Conflict",
-                        Colors.red,
-                        "Red border with X - Time conflicts with existing reservation",
-                      ),
-                      _buildLegendItem(
-                        "Disabled",
-                        Colors.grey,
-                        "Grayed out with block icon - Spot is inactive and cannot be reserved",
-                      ),
+                      _buildLegendItem("Available", const Color(0xFFE2E8F0), "Gray border - Spot is available for reservation", isDark),
+                      _buildLegendItem("Recommended", const Color(0xFFD4AF37), "Golden border with star - AI recommended based on your preferences", isDark),
+                      _buildLegendItem("Selected", const Color(0xFF10B981), "Colored border - You selected this spot", isDark),
+                      _buildLegendItem("Conflict", Colors.red, "Red border with X - Time conflicts with existing reservation", isDark),
+                      _buildLegendItem("Disabled", Colors.grey, "Grayed out with block icon - Spot is inactive and cannot be reserved", isDark),
                     ],
+                    isDark,
                   ),
                   const SizedBox(height: 20),
 
@@ -1250,19 +1240,11 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   _buildLegendSection(
                     "Reservation Types",
                     [
-                      _buildLegendTextItem(
-                        "Hourly",
-                        "You select both start and end time. Price = hours × base price × spot multiplier",
-                      ),
-                      _buildLegendTextItem(
-                        "Daily",
-                        "You select start time only. Reservation lasts 24 hours from start. Price = base price × spot multiplier",
-                      ),
-                      _buildLegendTextItem(
-                        "Monthly",
-                        "You select start date only. Reservation lasts 1 month from start. Price = base price × spot multiplier",
-                      ),
+                      _buildLegendTextItem("Hourly", "You select both start and end time. Price = hours × base price × spot multiplier", isDark),
+                      _buildLegendTextItem("Daily", "You select start time only. Reservation lasts 24 hours from start. Price = base price × spot multiplier", isDark),
+                      _buildLegendTextItem("Monthly", "You select start date only. Reservation lasts 1 month from start. Price = base price × spot multiplier", isDark),
                     ],
+                    isDark,
                   ),
                   const SizedBox(height: 20),
 
@@ -1270,19 +1252,11 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   _buildLegendSection(
                     "Conflict Detection",
                     [
-                      _buildLegendTextItem(
-                        "Automatic Check",
-                        "The system automatically checks if your selected time conflicts with existing reservations.",
-                      ),
-                      _buildLegendTextItem(
-                        "Red Indicator",
-                        "If a spot shows a red border with X, it means there's already a reservation during your selected time period.",
-                      ),
-                      _buildLegendTextItem(
-                        "Price Calculation",
-                        "Price is calculated based on reservation type, duration, and spot type multiplier. See price breakdown for details.",
-                      ),
+                      _buildLegendTextItem("Automatic Check", "The system automatically checks if your selected time conflicts with existing reservations.", isDark),
+                      _buildLegendTextItem("Red Indicator", "If a spot shows a red border with X, it means there's already a reservation during your selected time period.", isDark),
+                      _buildLegendTextItem("Price Calculation", "Price is calculated based on reservation type, duration, and spot type multiplier. See price breakdown for details.", isDark),
                     ],
+                    isDark,
                   ),
                   const SizedBox(height: 16),
 
@@ -1317,16 +1291,16 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildLegendSection(String title, List<Widget> items) {
+  Widget _buildLegendSection(String title, List<Widget> items, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
+            color: isDark ? Colors.white : const Color(0xFF1F2937),
           ),
         ),
         const SizedBox(height: 12),
@@ -1335,7 +1309,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color, String description) {
+  Widget _buildLegendItem(String label, Color color, String description, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -1356,10 +1330,10 @@ class _ReservationScreenState extends State<ReservationScreen> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937),
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1367,7 +1341,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   description,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[700],
+                    color: isDark ? Colors.grey[400] : Colors.grey[700],
                   ),
                 ),
               ],
@@ -1378,7 +1352,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildLegendTextItem(String label, String description) {
+  Widget _buildLegendTextItem(String label, String description, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -1399,10 +1373,10 @@ class _ReservationScreenState extends State<ReservationScreen> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937),
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1410,7 +1384,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   description,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[700],
+                    color: isDark ? Colors.grey[400] : Colors.grey[700],
                   ),
                 ),
               ],
@@ -1421,7 +1395,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildParkingSpotCard(ParkingSpot spot) {
+  Widget _buildParkingSpotCard(ParkingSpot spot, bool isDark) {
     final spotColor = _getSpotTypeColor(spot.parkingSpotTypeId, spot.parkingSpotTypeName);
     final isSelected = selectedSpot?.id == spot.id;
     final isConflicted = _isSpotConflicted(spot);
@@ -1447,8 +1421,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
             color: isSelected
                 ? spotColor.withOpacity(0.2)
                 : isDisabled
-                    ? Colors.grey[100]
-                    : Colors.white,
+                    ? (isDark ? Colors.grey[700]! : Colors.grey[100])
+                    : (isDark ? const Color(0xFF334155) : Colors.white),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected
@@ -1459,7 +1433,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                           ? const Color(0xFFD4AF37) // Golden for recommended
                           : isDisabled
                               ? Colors.grey[400]!
-                              : const Color(0xFFE2E8F0),
+                              : (isDark ? Colors.grey[600]! : const Color(0xFFE2E8F0)),
               width: isSelected ? 3 : isConflicted ? 3 : isRecommended ? 3 : 2,
               style: isDisabled ? BorderStyle.solid : BorderStyle.solid,
             ),
@@ -1471,7 +1445,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                         ? Colors.red.withOpacity(0.2)
                         : isRecommended
                             ? const Color(0xFFD4AF37).withOpacity(0.4)
-                            : Colors.black.withOpacity(0.05),
+                            : (isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05)),
                 blurRadius: isSelected ? 8 : isConflicted ? 8 : isRecommended ? 10 : 4,
                 spreadRadius: isRecommended ? 1 : 0,
                 offset: const Offset(0, 2),
@@ -1573,7 +1547,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                             ? Colors.grey[600]
                             : isSelected
                                 ? spotColor
-                                : const Color(0xFF1E293B),
+                                : (isDark ? Colors.white : const Color(0xFF1E293B)),
                       ),
                     ),
                     // Strikethrough for disabled spots
@@ -1650,7 +1624,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
     }
   }
 
-  Widget _buildPriceSummary() {
+  Widget _buildPriceSummary(bool isDark) {
     if (selectedReservationType == null || selectedSpot == null || calculatedPrice == null) {
       return const SizedBox.shrink();
     }
@@ -1704,12 +1678,12 @@ class _ReservationScreenState extends State<ReservationScreen> {
                 color: const Color(0xFF8B6F47),
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 "Price Breakdown",
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F2937),
+                  color: isDark ? Colors.white : const Color(0xFF1F2937),
                 ),
               ),
             ],
@@ -1720,6 +1694,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
           _buildPriceDetailRow(
             "Reservation Type",
             "${selectedReservationType!.name} (\$${selectedReservationType!.price.toStringAsFixed(2)})",
+            isDark,
           ),
           const SizedBox(height: 8),
           
@@ -1727,6 +1702,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
           _buildPriceDetailRow(
             "Spot Type",
             "${spotType.name} (${spotType.priceMultiplier}x multiplier)",
+            isDark,
           ),
           const SizedBox(height: 8),
           
@@ -1735,6 +1711,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
             _buildPriceDetailRow(
               "Calculation",
               calculationDetails,
+              isDark,
             ),
             const SizedBox(height: 12),
           ],
@@ -1750,12 +1727,12 @@ class _ReservationScreenState extends State<ReservationScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 "Total Price:",
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1F2937),
+                  color: isDark ? Colors.white : const Color(0xFF1F2937),
                 ),
               ),
               Text(
@@ -1773,7 +1750,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
   }
 
-  Widget _buildPriceDetailRow(String label, String value) {
+  Widget _buildPriceDetailRow(String label, String value, bool isDark) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1783,7 +1760,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
             label,
             style: TextStyle(
               fontSize: 13,
-              color: Colors.grey[700],
+              color: isDark ? Colors.grey[400] : Colors.grey[700],
             ),
           ),
         ),
@@ -1791,10 +1768,10 @@ class _ReservationScreenState extends State<ReservationScreen> {
           flex: 3,
           child: Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1F2937),
+              color: isDark ? Colors.white : const Color(0xFF1F2937),
             ),
             textAlign: TextAlign.right,
           ),

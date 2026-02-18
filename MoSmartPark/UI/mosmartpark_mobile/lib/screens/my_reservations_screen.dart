@@ -274,15 +274,16 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFFF8FAFC),
-            Colors.white,
-          ],
+          colors: isDark
+              ? [const Color(0xFF1A1A2E), const Color(0xFF16213E)]
+              : [const Color(0xFFF8FAFC), Colors.white],
         ),
       ),
       child: Column(
@@ -293,12 +294,12 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'My Reservations',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F2937),
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -307,7 +308,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                   '${filteredReservations?.length ?? 0} ${(filteredReservations?.length ?? 0) == 1 ? 'reservation' : 'reservations'}',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -317,13 +318,13 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildFilterChip('All', _selectedFilter == 'All'),
+                      _buildFilterChip('All', _selectedFilter == 'All', isDark),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Upcoming', _selectedFilter == 'Upcoming'),
+                      _buildFilterChip('Upcoming', _selectedFilter == 'Upcoming', isDark),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Active', _selectedFilter == 'Active'),
+                      _buildFilterChip('Active', _selectedFilter == 'Active', isDark),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Completed', _selectedFilter == 'Completed'),
+                      _buildFilterChip('Completed', _selectedFilter == 'Completed', isDark),
                     ],
                   ),
                 ),
@@ -333,7 +334,11 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
           // Reservations List
           Expanded(
             child: isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: const Color(0xFF8B6F47),
+                  ),
+                )
               : errorMessage != null
                   ? Center(
                       child: Column(
@@ -342,14 +347,14 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                           Icon(
                             Icons.error_outline,
                             size: 64,
-                            color: Colors.grey[400],
+                            color: isDark ? Colors.grey[500] : Colors.grey[400],
                           ),
                           const SizedBox(height: 16),
                           Text(
                             errorMessage!,
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.grey[600],
+                              color: isDark ? Colors.grey[300] : Colors.grey[600],
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -373,7 +378,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                               Icon(
                                 Icons.calendar_today_outlined,
                                 size: 64,
-                                color: Colors.grey[400],
+                                color: isDark ? Colors.grey[500] : Colors.grey[400],
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -381,7 +386,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.grey[600],
+                                  color: isDark ? Colors.grey[300] : Colors.grey[600],
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -391,7 +396,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                                     : 'No $_selectedFilter.toLowerCase() reservations',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.grey[500],
+                                  color: isDark ? Colors.grey[400] : Colors.grey[500],
                                 ),
                               ),
                             ],
@@ -415,11 +420,13 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 16),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.08),
+                                      color: isDark
+                                          ? Colors.black.withOpacity(0.3)
+                                          : Colors.black.withOpacity(0.08),
                                       blurRadius: 15,
                                       offset: const Offset(0, 4),
                                       spreadRadius: 0,
@@ -451,7 +458,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                                             Container(
                                               height: 160,
                                               width: double.infinity,
-                                              color: Colors.grey[200],
+                                              color: isDark ? const Color(0xFF334155) : Colors.grey[200],
                                               child: _buildCarImage(
                                                 reservation.carPicture,
                                                 width: double.infinity,
@@ -556,7 +563,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                                                 Icon(
                                                   Icons.calendar_today_rounded,
                                                   size: 16,
-                                                  color: Colors.grey[600],
+                                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
                                                 ),
                                                 const SizedBox(width: 6),
                                                 Expanded(
@@ -566,7 +573,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                                                         : 'N/A',
                                                     style: TextStyle(
                                                       fontSize: 13,
-                                                      color: Colors.grey[700],
+                                                      color: isDark ? Colors.grey[300] : Colors.grey[700],
                                                       fontWeight: FontWeight.w500,
                                                     ),
                                                   ),
@@ -599,12 +606,12 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                                             Row(
                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
-                                                const Text(
+                                                Text(
                                                   'Total Price:',
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF1F2937),
+                                                    color: isDark ? Colors.white : const Color(0xFF1F2937),
                                                   ),
                                                 ),
                                                 Container(
@@ -687,7 +694,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
     );
   }
 
-  Widget _buildFilterChip(String label, bool isSelected) {
+  Widget _buildFilterChip(String label, bool isSelected, bool isDark) {
     return FilterChip(
       label: Text(label),
       selected: isSelected,
@@ -700,14 +707,14 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
       selectedColor: const Color(0xFF8B6F47),
       checkmarkColor: Colors.white,
       labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.grey[700],
+        color: isSelected ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[700]),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: isSelected ? const Color(0xFF8B6F47) : Colors.grey[300]!,
+          color: isSelected ? const Color(0xFF8B6F47) : (isDark ? Colors.grey[600]! : Colors.grey[300]!),
           width: 1.5,
         ),
       ),

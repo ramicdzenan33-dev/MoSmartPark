@@ -63,6 +63,7 @@ class _CarsListScreenState extends State<CarsListScreen> {
   }
 
   Future<void> _deleteCar(Car car) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
@@ -72,7 +73,8 @@ class _CarsListScreenState extends State<CarsListScreen> {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            gradient: LinearGradient(
+            color: isDark ? const Color(0xFF1E293B) : null,
+            gradient: isDark ? null : LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
@@ -106,12 +108,12 @@ class _CarsListScreenState extends State<CarsListScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 "Delete Car",
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1F2937),
+                  color: isDark ? Colors.white : const Color(0xFF1F2937),
                   letterSpacing: -0.5,
                 ),
               ),
@@ -120,7 +122,7 @@ class _CarsListScreenState extends State<CarsListScreen> {
                 "Are you sure you want to deactivate ${car.brandName} ${car.model} (${car.licensePlate})?",
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[700],
+                  color: isDark ? Colors.grey[300] : Colors.grey[700],
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
@@ -132,9 +134,9 @@ class _CarsListScreenState extends State<CarsListScreen> {
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(context).pop(false),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey[700],
+                        foregroundColor: isDark ? Colors.grey[400] : Colors.grey[700],
                         side: BorderSide(
-                          color: Colors.grey[300]!,
+                          color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
                           width: 1.5,
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -362,6 +364,8 @@ class _CarsListScreenState extends State<CarsListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
         // Add Car Button
@@ -403,7 +407,11 @@ class _CarsListScreenState extends State<CarsListScreen> {
         // Cars List
         Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: const Color(0xFF8B6F47),
+                    ),
+                  )
                 : errorMessage != null
                     ? Center(
                         child: Column(
@@ -412,20 +420,24 @@ class _CarsListScreenState extends State<CarsListScreen> {
                             Icon(
                               Icons.error_outline,
                               size: 64,
-                              color: Colors.grey[400],
+                              color: isDark ? Colors.grey[500] : Colors.grey[400],
                             ),
                             const SizedBox(height: 16),
                             Text(
                               errorMessage!,
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.grey[600],
+                                color: isDark ? Colors.grey[300] : Colors.grey[600],
                               ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton(
                               onPressed: _loadCars,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF8B6F47),
+                                foregroundColor: Colors.white,
+                              ),
                               child: const Text('Retry'),
                             ),
                           ],
@@ -439,7 +451,7 @@ class _CarsListScreenState extends State<CarsListScreen> {
                                 Icon(
                                   Icons.directions_car_outlined,
                                   size: 64,
-                                  color: Colors.grey[400],
+                                  color: isDark ? Colors.grey[500] : Colors.grey[400],
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
@@ -447,7 +459,7 @@ class _CarsListScreenState extends State<CarsListScreen> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.grey[600],
+                                    color: isDark ? Colors.grey[300] : Colors.grey[600],
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -455,7 +467,7 @@ class _CarsListScreenState extends State<CarsListScreen> {
                                   'Add your first car to get started',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.grey[500],
+                                    color: isDark ? Colors.grey[400] : Colors.grey[500],
                                   ),
                                 ),
                               ],
@@ -474,11 +486,13 @@ class _CarsListScreenState extends State<CarsListScreen> {
                                 return Container(
                                   margin: const EdgeInsets.only(bottom: 16),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.08),
+                                        color: isDark
+                                            ? Colors.black.withOpacity(0.3)
+                                            : Colors.black.withOpacity(0.08),
                                         blurRadius: 15,
                                         offset: const Offset(0, 4),
                                         spreadRadius: 0,
@@ -513,7 +527,7 @@ class _CarsListScreenState extends State<CarsListScreen> {
                                               Container(
                                                 height: 160,
                                                 width: double.infinity,
-                                                color: Colors.grey[200],
+                                                color: isDark ? const Color(0xFF334155) : Colors.grey[200],
                                                 child: _buildCarImage(
                                                   car.picture,
                                                   width: double.infinity,
@@ -644,7 +658,7 @@ class _CarsListScreenState extends State<CarsListScreen> {
                                                           color: _parseColor(car.colorHexCode),
                                                           shape: BoxShape.circle,
                                                           border: Border.all(
-                                                            color: Colors.grey[300]!,
+                                                            color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
                                                             width: 1.5,
                                                           ),
                                                         ),
@@ -654,7 +668,7 @@ class _CarsListScreenState extends State<CarsListScreen> {
                                                         car.colorName,
                                                         style: TextStyle(
                                                           fontSize: 14,
-                                                          color: Colors.grey[700],
+                                                          color: isDark ? Colors.grey[300] : Colors.grey[700],
                                                           fontWeight: FontWeight.w500,
                                                         ),
                                                       ),

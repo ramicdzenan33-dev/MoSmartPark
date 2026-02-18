@@ -65,6 +65,7 @@ builder.Services.AddTransient<IReviewService, ReviewService>();
 builder.Services.AddTransient<IBusinessReportService, BusinessReportService>();
 builder.Services.AddTransient<IStripePaymentService, StripePaymentService>();
 builder.Services.AddTransient<INotificationService, NotificationService>();
+builder.Services.AddTransient<IUserPreferencesService, UserPreferencesService>();
 
 
 // Configure database

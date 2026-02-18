@@ -24,6 +24,7 @@ namespace MoSmartPark.Services.Database
         public DbSet<Review> Reviews { get; set; }
         public DbSet<StripePayment> StripePayments { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<UserPreferences> UserPreferences { get; set; }
     
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -200,6 +201,23 @@ namespace MoSmartPark.Services.Database
 
             modelBuilder.Entity<Notification>()
                 .HasIndex(n => n.CreatedAt);
+
+            // Configure UserPreferences entity
+            modelBuilder.Entity<UserPreferences>()
+                .HasOne(up => up.User)
+                .WithMany()
+                .HasForeignKey(up => up.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserPreferences>()
+                .HasOne(up => up.DefaultParkingZone)
+                .WithMany()
+                .HasForeignKey(up => up.DefaultParkingZoneId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<UserPreferences>()
+                .HasIndex(up => up.UserId)
+                .IsUnique();
 
             // Seed initial data
             modelBuilder.SeedData();

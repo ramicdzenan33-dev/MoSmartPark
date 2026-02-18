@@ -252,15 +252,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFFF8FAFC),
-            Colors.white,
-          ],
+          colors: isDark
+              ? [const Color(0xFF1A1A2E), const Color(0xFF16213E)]
+              : [const Color(0xFFF8FAFC), Colors.white],
         ),
       ),
       child: Column(
@@ -283,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
+                          color: isDark ? Colors.white : Colors.grey[800],
                           letterSpacing: -0.5,
                         ),
                       ),
@@ -292,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         '${reservations!.length} ${reservations!.length == 1 ? 'reservation' : 'reservations'}',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -344,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icon(
                                 Icons.calendar_today_outlined,
                                 size: 64,
-                                color: Colors.grey[400],
+                                color: isDark ? Colors.grey[600] : Colors.grey[400],
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -352,7 +353,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.grey[600],
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -360,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 'Your upcoming reservations will appear here',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.grey[500],
+                                  color: isDark ? Colors.grey[500] : Colors.grey[500],
                                 ),
                               ),
                             ],
@@ -384,11 +385,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 16),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.08),
+                                      color: isDark
+                                          ? Colors.black.withOpacity(0.3)
+                                          : Colors.black.withOpacity(0.08),
                                       blurRadius: 15,
                                       offset: const Offset(0, 4),
                                       spreadRadius: 0,
@@ -570,7 +573,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       Icon(
                                                         Icons.calendar_today_rounded,
                                                         size: 16,
-                                                        color: Colors.grey[600],
+                                                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                                                       ),
                                                       const SizedBox(width: 6),
                                                       Flexible(
@@ -580,7 +583,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                               : 'N/A',
                                                           style: TextStyle(
                                                             fontSize: 13,
-                                                            color: Colors.grey[700],
+                                                            color: isDark ? Colors.grey[300] : Colors.grey[700],
                                                             fontWeight: FontWeight.w500,
                                                           ),
                                                           maxLines: 1,
@@ -673,7 +676,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 Icon(
                                                   Icons.info_outline_rounded,
                                                   size: 16,
-                                                  color: Colors.grey[500],
+                                                  color: isDark ? Colors.grey[600] : Colors.grey[500],
                                                 ),
                                                 const SizedBox(width: 6),
                                                 Expanded(
@@ -681,7 +684,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     'Show your ticket at the entrance to open the gate',
                                                     style: TextStyle(
                                                       fontSize: 11,
-                                                      color: Colors.grey[600],
+                                                      color: isDark ? Colors.grey[500] : Colors.grey[600],
                                                       fontStyle: FontStyle.italic,
                                                     ),
                                                     maxLines: 2,

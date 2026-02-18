@@ -252,6 +252,37 @@ namespace MoSmartPark.Services.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UserPreferences",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    ThemeMode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    DefaultParkingZoneId = table.Column<int>(type: "int", nullable: true),
+                    NotifyReviews = table.Column<bool>(type: "bit", nullable: false),
+                    NotifyReservations = table.Column<bool>(type: "bit", nullable: false),
+                    NotifyCars = table.Column<bool>(type: "bit", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserPreferences", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserPreferences_ParkingZones_DefaultParkingZoneId",
+                        column: x => x.DefaultParkingZoneId,
+                        principalTable: "ParkingZones",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_UserPreferences_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserRoles",
                 columns: table => new
                 {
@@ -796,6 +827,17 @@ namespace MoSmartPark.Services.Migrations
                 column: "StripePaymentIntentId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserPreferences_DefaultParkingZoneId",
+                table: "UserPreferences",
+                column: "DefaultParkingZoneId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserPreferences_UserId",
+                table: "UserPreferences",
+                column: "UserId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserRoles_RoleId",
                 table: "UserRoles",
                 column: "RoleId");
@@ -840,6 +882,9 @@ namespace MoSmartPark.Services.Migrations
 
             migrationBuilder.DropTable(
                 name: "StripePayments");
+
+            migrationBuilder.DropTable(
+                name: "UserPreferences");
 
             migrationBuilder.DropTable(
                 name: "UserRoles");

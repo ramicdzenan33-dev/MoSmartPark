@@ -13,6 +13,7 @@ import 'package:mosmartpark_desktop/screens/parking_spot_type_list_screen.dart';
 import 'package:mosmartpark_desktop/screens/parking_zone_list_screen.dart';
 import 'package:mosmartpark_desktop/screens/parking_watch_screen.dart';
 import 'package:mosmartpark_desktop/screens/business_report_screen.dart';
+import 'package:mosmartpark_desktop/screens/settings_screen.dart';
 import 'package:mosmartpark_desktop/widgets/notification_icon_button.dart';
 
 class MasterScreen extends StatefulWidget {
@@ -430,6 +431,18 @@ class _MasterScreenState extends State<MasterScreen>
               label: 'Cities',
               screen: CityListScreen(),
             ),
+            const SizedBox(height: 5),
+
+            // Settings
+            _buildSectionHeader('App'),
+            const SizedBox(height: 8),
+            _modernDrawerTile(
+              context,
+              icon: Icons.settings_outlined,
+              activeIcon: Icons.settings,
+              label: 'Settings',
+              screen: const SettingsScreen(),
+            ),
           ],
         ),
       ),
@@ -531,6 +544,8 @@ Widget _modernDrawerTile(
         currentRoute == 'BrandListScreen' ||
         currentRoute == 'BrandDetailsScreen' ||
         currentRoute == 'BrandEditScreen';
+  } else if (label == 'Settings') {
+    isSelected = currentRoute == 'SettingsScreen';
   }
 
   return Container(

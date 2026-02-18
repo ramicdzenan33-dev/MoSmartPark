@@ -13,6 +13,7 @@ import 'package:mosmartpark_desktop/providers/parking_spot_type_provider.dart';
 import 'package:mosmartpark_desktop/providers/parking_zone_provider.dart';
 import 'package:mosmartpark_desktop/providers/parking_spot_provider.dart';
 import 'package:mosmartpark_desktop/providers/business_report_provider.dart';
+import 'package:mosmartpark_desktop/providers/settings_provider.dart';
 import 'package:mosmartpark_desktop/providers/auth_provider.dart';
 import 'package:mosmartpark_desktop/screens/business_report_screen.dart';
 import 'package:mosmartpark_desktop/screens/parking_watch_screen.dart';
@@ -66,6 +67,9 @@ void main() async {
         ),
         ChangeNotifierProvider<BusinessReportProvider>(
           create: (context) => BusinessReportProvider(),
+        ),
+        ChangeNotifierProvider<SettingsProvider>(
+          create: (context) => SettingsProvider(),
         ),
       ],
       child: const MyApp(),

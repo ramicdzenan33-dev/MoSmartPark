@@ -2271,6 +2271,47 @@ namespace MoSmartPark.Services.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MoSmartPark.Services.Database.UserPreferences", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("DefaultParkingZoneId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("NotifyCars")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NotifyReservations")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NotifyReviews")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ThemeMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DefaultParkingZoneId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserPreferences");
+                });
+
             modelBuilder.Entity("MoSmartPark.Services.Database.UserRole", b =>
                 {
                     b.Property<int>("Id")
@@ -2528,6 +2569,24 @@ namespace MoSmartPark.Services.Migrations
                     b.Navigation("City");
 
                     b.Navigation("Gender");
+                });
+
+            modelBuilder.Entity("MoSmartPark.Services.Database.UserPreferences", b =>
+                {
+                    b.HasOne("MoSmartPark.Services.Database.ParkingZone", "DefaultParkingZone")
+                        .WithMany()
+                        .HasForeignKey("DefaultParkingZoneId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("MoSmartPark.Services.Database.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DefaultParkingZone");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("MoSmartPark.Services.Database.UserRole", b =>

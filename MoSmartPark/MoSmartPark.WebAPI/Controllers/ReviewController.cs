@@ -11,12 +11,14 @@ namespace MoSmartPark.WebAPI.Controllers
         private readonly IReviewService _reviewService;
         private readonly INotificationService _notificationService;
         private readonly IUserService _userService;
+        private readonly IUserPreferencesService _userPreferencesService;
 
-        public ReviewController(IReviewService service, INotificationService notificationService, IUserService userService) : base(service)
+        public ReviewController(IReviewService service, INotificationService notificationService, IUserService userService, IUserPreferencesService userPreferencesService) : base(service)
         {
             _reviewService = service;
             _notificationService = notificationService;
             _userService = userService;
+            _userPreferencesService = userPreferencesService;
         }
 
         [HttpPost]
@@ -24,24 +26,28 @@ namespace MoSmartPark.WebAPI.Controllers
         {
             var review = await base.Create(request);
 
-            // Send notification to all admins
+            // Notify admins who have "New Reviews" enabled in their preferences
             var adminSearch = new UserSearchObject { RetrieveAll = true };
             var admins = await _userService.GetAsync(adminSearch);
-            
+
             foreach (var admin in admins.Items ?? new List<UserResponse>())
             {
                 var hasAdminRole = admin.Roles?.Any(r => r.Name == "Administrator") ?? false;
-                if (hasAdminRole)
-                {
-                    await _notificationService.CreateNotificationAsync(
-                        admin.Id,
-                        "new_review",
-                        "New Review Submitted",
-                        $"{review.UserFullName} left a {review.Rating}-star review.",
-                        "Review",
-                        review.Id
-                    );
-                }
+                if (!hasAdminRole)
+                    continue;
+
+                var prefs = await _userPreferencesService.GetByUserIdAsync(admin.Id);
+                if (!prefs.NotifyReviews)
+                    continue;
+
+                await _notificationService.CreateNotificationAsync(
+                    admin.Id,
+                    "new_review",
+                    "New Review Submitted",
+                    $"{review.UserFullName} left a {review.Rating}-star review.",
+                    "Review",
+                    review.Id
+                );
             }
 
             return review;

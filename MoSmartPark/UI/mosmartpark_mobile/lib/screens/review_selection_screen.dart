@@ -277,8 +277,10 @@ class _ReviewSelectionScreenState extends State<ReviewSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
           "Select Reservation to Review",
@@ -293,11 +295,17 @@ class _ReviewSelectionScreenState extends State<ReviewSelectionScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF6B5B3D),
-                const Color(0xFF8B6F47),
-                const Color(0xFFA0826D),
-              ],
+              colors: isDark
+                  ? [
+                      const Color(0xFF1A120B),
+                      const Color(0xFF3C2A21),
+                      const Color(0xFF5C4033),
+                    ]
+                  : [
+                      const Color(0xFF6B5B3D),
+                      const Color(0xFF8B6F47),
+                      const Color(0xFFA0826D),
+                    ],
             ),
           ),
         ),
@@ -307,13 +315,13 @@ class _ReviewSelectionScreenState extends State<ReviewSelectionScreen> {
         children: [
           Expanded(
             child: _isLoading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B6F47)),
+                      color: const Color(0xFF8B6F47),
                     ),
                   )
                 : _unreviewedReservations.isEmpty
-                    ? _buildEmptyState()
+                    ? _buildEmptyState(isDark)
                     : RefreshIndicator(
                         onRefresh: _loadData,
                         color: const Color(0xFF8B6F47),
@@ -322,7 +330,7 @@ class _ReviewSelectionScreenState extends State<ReviewSelectionScreen> {
                           itemCount: _unreviewedReservations.length,
                           itemBuilder: (context, index) {
                             final reservation = _unreviewedReservations[index];
-                            return _buildReservationCard(reservation);
+                            return _buildReservationCard(reservation, isDark);
                           },
                         ),
                       ),
@@ -332,7 +340,7 @@ class _ReviewSelectionScreenState extends State<ReviewSelectionScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(bool isDark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -340,7 +348,7 @@ class _ReviewSelectionScreenState extends State<ReviewSelectionScreen> {
           Icon(
             Icons.check_circle_outline,
             size: 64,
-            color: Colors.grey[400],
+            color: isDark ? Colors.grey[500] : Colors.grey[400],
           ),
           const SizedBox(height: 16),
           Text(
@@ -348,7 +356,7 @@ class _ReviewSelectionScreenState extends State<ReviewSelectionScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: isDark ? Colors.grey[300] : Colors.grey[600],
             ),
           ),
           const SizedBox(height: 8),
@@ -356,7 +364,7 @@ class _ReviewSelectionScreenState extends State<ReviewSelectionScreen> {
             'You\'ve reviewed all your parking reservations!',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[500],
+              color: isDark ? Colors.grey[400] : Colors.grey[500],
             ),
           ),
         ],
@@ -364,15 +372,15 @@ class _ReviewSelectionScreenState extends State<ReviewSelectionScreen> {
     );
   }
 
-  Widget _buildReservationCard(Reservation reservation) {
+  Widget _buildReservationCard(Reservation reservation, bool isDark) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.08),
             blurRadius: 15,
             offset: const Offset(0, 4),
             spreadRadius: 0,
@@ -396,7 +404,7 @@ class _ReviewSelectionScreenState extends State<ReviewSelectionScreen> {
                   Container(
                     height: 160,
                     width: double.infinity,
-                    color: Colors.grey[200],
+                    color: isDark ? const Color(0xFF334155) : Colors.grey[200],
                     child: _buildCarImage(
                       reservation.carPicture,
                       width: double.infinity,

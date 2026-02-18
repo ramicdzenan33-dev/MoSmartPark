@@ -262,8 +262,10 @@ class _ReviewDetailsScreenState extends State<ReviewDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Text(
           widget.review.id == 0 ? "Create Review" : "Edit Review",
@@ -278,11 +280,17 @@ class _ReviewDetailsScreenState extends State<ReviewDetailsScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF6B5B3D),
-                const Color(0xFF8B6F47),
-                const Color(0xFFA0826D),
-              ],
+              colors: isDark
+                  ? [
+                      const Color(0xFF1A120B),
+                      const Color(0xFF3C2A21),
+                      const Color(0xFF5C4033),
+                    ]
+                  : [
+                      const Color(0xFF6B5B3D),
+                      const Color(0xFF8B6F47),
+                      const Color(0xFFA0826D),
+                    ],
             ),
           ),
         ),
@@ -298,11 +306,11 @@ class _ReviewDetailsScreenState extends State<ReviewDetailsScreen> {
               // Reservation Info Card with Cover Image
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.08),
                       blurRadius: 15,
                       offset: const Offset(0, 4),
                       spreadRadius: 0,
@@ -323,7 +331,7 @@ class _ReviewDetailsScreenState extends State<ReviewDetailsScreen> {
                           Container(
                             height: 180,
                             width: double.infinity,
-                            color: Colors.grey[200],
+                            color: isDark ? const Color(0xFF334155) : Colors.grey[200],
                             child: _buildCarImage(
                               widget.review.carPicture,
                               width: double.infinity,
@@ -472,7 +480,7 @@ class _ReviewDetailsScreenState extends State<ReviewDetailsScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: isDark ? const Color(0xFF334155) : Colors.grey[50],
                 ),
               ),
               const SizedBox(height: 16),
@@ -480,10 +488,10 @@ class _ReviewDetailsScreenState extends State<ReviewDetailsScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: isDark ? const Color(0xFF334155) : Colors.grey[50],
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.grey[300]!,
+                    color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
                     width: 1,
                   ),
                 ),
@@ -524,7 +532,7 @@ class _ReviewDetailsScreenState extends State<ReviewDetailsScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: isDark ? const Color(0xFF334155) : Colors.grey[50],
                 ),
               ),
               const SizedBox(height: 32),
