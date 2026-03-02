@@ -412,6 +412,36 @@ namespace MoSmartPark.Services.Services
             }
         }
 
+        public async Task<List<ParkingSpotAvailabilityResponse>> GetAvailabilityAsync(int? zoneId, DateTime startDate, DateTime endDate)
+        {
+            var query = _context.ParkingSpots
+                .Include(p => p.ParkingSpotType)
+                .Include(p => p.ParkingZone)
+                .Where(p => p.IsActive && p.Latitude.HasValue && p.Longitude.HasValue);
+
+            if (zoneId.HasValue)
+            {
+                query = query.Where(p => p.ParkingZoneId == zoneId.Value);
+            }
+
+            var spots = await query.ToListAsync();
+
+            var spotIds = spots.Select(p => p.Id).ToList();
+            var conflictedIds = await GetConflictedSpotIds(spotIds, startDate, endDate);
+
+            return spots.Select(p => new ParkingSpotAvailabilityResponse
+            {
+                Id = p.Id,
+                ParkingNumber = p.ParkingNumber,
+                ParkingSpotTypeName = p.ParkingSpotType?.Name ?? string.Empty,
+                ParkingZoneId = p.ParkingZoneId,
+                ParkingZoneName = p.ParkingZone?.Name ?? string.Empty,
+                Latitude = p.Latitude,
+                Longitude = p.Longitude,
+                IsAvailable = !conflictedIds.Contains(p.Id)
+            }).ToList();
+        }
+
         private class FeedbackEntry
         {
             [KeyType(count: 100000)]

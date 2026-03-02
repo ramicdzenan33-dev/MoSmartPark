@@ -19,6 +19,9 @@ namespace MoSmartPark.Services.Database
 
         public bool IsActive { get; set; } = true;
 
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+
         // Navigation properties
         public ParkingSpotType ParkingSpotType { get; set; } = null!;
         public ParkingZone ParkingZone { get; set; } = null!;

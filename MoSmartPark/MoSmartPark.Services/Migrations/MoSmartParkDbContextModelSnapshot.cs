@@ -672,6 +672,12 @@ namespace MoSmartPark.Services.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("float");
+
                     b.Property<string>("ParkingNumber")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -696,6 +702,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 1,
                             IsActive = true,
+                            Latitude = 43.856299999999997,
+                            Longitude = 18.4131,
                             ParkingNumber = "A1",
                             ParkingSpotTypeId = 5,
                             ParkingZoneId = 1
@@ -704,6 +712,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 2,
                             IsActive = true,
+                            Latitude = 43.856299999999997,
+                            Longitude = 18.41319,
                             ParkingNumber = "A2",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -712,6 +722,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 3,
                             IsActive = true,
+                            Latitude = 43.856299999999997,
+                            Longitude = 18.41328,
                             ParkingNumber = "A3",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -720,6 +732,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 4,
                             IsActive = true,
+                            Latitude = 43.856299999999997,
+                            Longitude = 18.41337,
                             ParkingNumber = "A4",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -728,6 +742,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 5,
                             IsActive = true,
+                            Latitude = 43.856299999999997,
+                            Longitude = 18.413460000000001,
                             ParkingNumber = "A5",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -736,6 +752,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 6,
                             IsActive = true,
+                            Latitude = 43.856299999999997,
+                            Longitude = 18.413550000000001,
                             ParkingNumber = "A6",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -744,6 +762,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 7,
                             IsActive = true,
+                            Latitude = 43.856299999999997,
+                            Longitude = 18.413640000000001,
                             ParkingNumber = "A7",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -752,6 +772,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 8,
                             IsActive = true,
+                            Latitude = 43.856299999999997,
+                            Longitude = 18.413730000000001,
                             ParkingNumber = "A8",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -760,6 +782,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 9,
                             IsActive = true,
+                            Latitude = 43.856299999999997,
+                            Longitude = 18.413820000000001,
                             ParkingNumber = "A9",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -768,6 +792,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 10,
                             IsActive = true,
+                            Latitude = 43.856299999999997,
+                            Longitude = 18.413910000000001,
                             ParkingNumber = "A10",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -776,6 +802,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 11,
                             IsActive = true,
+                            Latitude = 43.856169999999999,
+                            Longitude = 18.4131,
                             ParkingNumber = "B1",
                             ParkingSpotTypeId = 4,
                             ParkingZoneId = 1
@@ -784,6 +812,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 12,
                             IsActive = true,
+                            Latitude = 43.856169999999999,
+                            Longitude = 18.41319,
                             ParkingNumber = "B2",
                             ParkingSpotTypeId = 4,
                             ParkingZoneId = 1
@@ -792,6 +822,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 13,
                             IsActive = true,
+                            Latitude = 43.856169999999999,
+                            Longitude = 18.41328,
                             ParkingNumber = "B3",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -800,6 +832,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 14,
                             IsActive = true,
+                            Latitude = 43.856169999999999,
+                            Longitude = 18.41337,
                             ParkingNumber = "B4",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -808,6 +842,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 15,
                             IsActive = true,
+                            Latitude = 43.856169999999999,
+                            Longitude = 18.413460000000001,
                             ParkingNumber = "B5",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -816,6 +852,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 16,
                             IsActive = true,
+                            Latitude = 43.856169999999999,
+                            Longitude = 18.413550000000001,
                             ParkingNumber = "B6",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -824,6 +862,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 17,
                             IsActive = true,
+                            Latitude = 43.856169999999999,
+                            Longitude = 18.413640000000001,
                             ParkingNumber = "B7",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -832,6 +872,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 18,
                             IsActive = true,
+                            Latitude = 43.856169999999999,
+                            Longitude = 18.413730000000001,
                             ParkingNumber = "B8",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -840,6 +882,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 19,
                             IsActive = true,
+                            Latitude = 43.856169999999999,
+                            Longitude = 18.413820000000001,
                             ParkingNumber = "B9",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -848,6 +892,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 20,
                             IsActive = true,
+                            Latitude = 43.856169999999999,
+                            Longitude = 18.413910000000001,
                             ParkingNumber = "B10",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -856,6 +902,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 21,
                             IsActive = true,
+                            Latitude = 43.85604,
+                            Longitude = 18.4131,
                             ParkingNumber = "C1",
                             ParkingSpotTypeId = 2,
                             ParkingZoneId = 1
@@ -864,6 +912,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 22,
                             IsActive = true,
+                            Latitude = 43.85604,
+                            Longitude = 18.41319,
                             ParkingNumber = "C2",
                             ParkingSpotTypeId = 2,
                             ParkingZoneId = 1
@@ -872,6 +922,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 23,
                             IsActive = true,
+                            Latitude = 43.85604,
+                            Longitude = 18.41328,
                             ParkingNumber = "C3",
                             ParkingSpotTypeId = 2,
                             ParkingZoneId = 1
@@ -880,6 +932,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 24,
                             IsActive = true,
+                            Latitude = 43.85604,
+                            Longitude = 18.41337,
                             ParkingNumber = "C4",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -888,6 +942,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 25,
                             IsActive = true,
+                            Latitude = 43.85604,
+                            Longitude = 18.413460000000001,
                             ParkingNumber = "C5",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -896,6 +952,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 26,
                             IsActive = true,
+                            Latitude = 43.85604,
+                            Longitude = 18.413550000000001,
                             ParkingNumber = "C6",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -904,6 +962,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 27,
                             IsActive = true,
+                            Latitude = 43.85604,
+                            Longitude = 18.413640000000001,
                             ParkingNumber = "C7",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -912,6 +972,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 28,
                             IsActive = true,
+                            Latitude = 43.85604,
+                            Longitude = 18.413730000000001,
                             ParkingNumber = "C8",
                             ParkingSpotTypeId = 3,
                             ParkingZoneId = 1
@@ -920,6 +982,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 29,
                             IsActive = true,
+                            Latitude = 43.85604,
+                            Longitude = 18.413820000000001,
                             ParkingNumber = "C9",
                             ParkingSpotTypeId = 3,
                             ParkingZoneId = 1
@@ -928,6 +992,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 30,
                             IsActive = true,
+                            Latitude = 43.85604,
+                            Longitude = 18.413910000000001,
                             ParkingNumber = "C10",
                             ParkingSpotTypeId = 3,
                             ParkingZoneId = 1
@@ -936,6 +1002,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 31,
                             IsActive = true,
+                            Latitude = 43.855909999999994,
+                            Longitude = 18.4131,
                             ParkingNumber = "D1",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -944,6 +1012,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 32,
                             IsActive = true,
+                            Latitude = 43.855909999999994,
+                            Longitude = 18.41319,
                             ParkingNumber = "D2",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -952,6 +1022,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 33,
                             IsActive = true,
+                            Latitude = 43.855909999999994,
+                            Longitude = 18.41328,
                             ParkingNumber = "D3",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -960,6 +1032,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 34,
                             IsActive = true,
+                            Latitude = 43.855909999999994,
+                            Longitude = 18.41337,
                             ParkingNumber = "D4",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -968,6 +1042,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 35,
                             IsActive = true,
+                            Latitude = 43.855909999999994,
+                            Longitude = 18.413460000000001,
                             ParkingNumber = "D5",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -976,6 +1052,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 36,
                             IsActive = true,
+                            Latitude = 43.855909999999994,
+                            Longitude = 18.413550000000001,
                             ParkingNumber = "D6",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -984,6 +1062,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 37,
                             IsActive = true,
+                            Latitude = 43.855909999999994,
+                            Longitude = 18.413640000000001,
                             ParkingNumber = "D7",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -992,6 +1072,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 38,
                             IsActive = true,
+                            Latitude = 43.855909999999994,
+                            Longitude = 18.413730000000001,
                             ParkingNumber = "D8",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -1000,6 +1082,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 39,
                             IsActive = true,
+                            Latitude = 43.855909999999994,
+                            Longitude = 18.413820000000001,
                             ParkingNumber = "D9",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 1
@@ -1008,6 +1092,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 40,
                             IsActive = true,
+                            Latitude = 43.855909999999994,
+                            Longitude = 18.413910000000001,
                             ParkingNumber = "D10",
                             ParkingSpotTypeId = 5,
                             ParkingZoneId = 1
@@ -1016,6 +1102,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 41,
                             IsActive = true,
+                            Latitude = 43.854500000000002,
+                            Longitude = 18.4131,
                             ParkingNumber = "A1",
                             ParkingSpotTypeId = 5,
                             ParkingZoneId = 2
@@ -1024,6 +1112,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 42,
                             IsActive = true,
+                            Latitude = 43.854500000000002,
+                            Longitude = 18.41319,
                             ParkingNumber = "A2",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1032,6 +1122,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 43,
                             IsActive = true,
+                            Latitude = 43.854500000000002,
+                            Longitude = 18.41328,
                             ParkingNumber = "A3",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1040,6 +1132,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 44,
                             IsActive = true,
+                            Latitude = 43.854500000000002,
+                            Longitude = 18.41337,
                             ParkingNumber = "A4",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1048,6 +1142,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 45,
                             IsActive = true,
+                            Latitude = 43.854500000000002,
+                            Longitude = 18.413460000000001,
                             ParkingNumber = "A5",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1056,6 +1152,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 46,
                             IsActive = true,
+                            Latitude = 43.854500000000002,
+                            Longitude = 18.413550000000001,
                             ParkingNumber = "A6",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1064,6 +1162,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 47,
                             IsActive = true,
+                            Latitude = 43.854500000000002,
+                            Longitude = 18.413640000000001,
                             ParkingNumber = "A7",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1072,6 +1172,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 48,
                             IsActive = true,
+                            Latitude = 43.854500000000002,
+                            Longitude = 18.413730000000001,
                             ParkingNumber = "A8",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1080,6 +1182,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 49,
                             IsActive = true,
+                            Latitude = 43.854500000000002,
+                            Longitude = 18.413820000000001,
                             ParkingNumber = "A9",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1088,6 +1192,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 50,
                             IsActive = true,
+                            Latitude = 43.854500000000002,
+                            Longitude = 18.413910000000001,
                             ParkingNumber = "A10",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1096,6 +1202,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 51,
                             IsActive = true,
+                            Latitude = 43.854370000000003,
+                            Longitude = 18.4131,
                             ParkingNumber = "B1",
                             ParkingSpotTypeId = 4,
                             ParkingZoneId = 2
@@ -1104,6 +1212,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 52,
                             IsActive = true,
+                            Latitude = 43.854370000000003,
+                            Longitude = 18.41319,
                             ParkingNumber = "B2",
                             ParkingSpotTypeId = 4,
                             ParkingZoneId = 2
@@ -1112,6 +1222,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 53,
                             IsActive = true,
+                            Latitude = 43.854370000000003,
+                            Longitude = 18.41328,
                             ParkingNumber = "B3",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1120,6 +1232,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 54,
                             IsActive = true,
+                            Latitude = 43.854370000000003,
+                            Longitude = 18.41337,
                             ParkingNumber = "B4",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1128,6 +1242,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 55,
                             IsActive = true,
+                            Latitude = 43.854370000000003,
+                            Longitude = 18.413460000000001,
                             ParkingNumber = "B5",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1136,6 +1252,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 56,
                             IsActive = true,
+                            Latitude = 43.854370000000003,
+                            Longitude = 18.413550000000001,
                             ParkingNumber = "B6",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1144,6 +1262,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 57,
                             IsActive = true,
+                            Latitude = 43.854370000000003,
+                            Longitude = 18.413640000000001,
                             ParkingNumber = "B7",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1152,6 +1272,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 58,
                             IsActive = true,
+                            Latitude = 43.854370000000003,
+                            Longitude = 18.413730000000001,
                             ParkingNumber = "B8",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1160,6 +1282,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 59,
                             IsActive = true,
+                            Latitude = 43.854370000000003,
+                            Longitude = 18.413820000000001,
                             ParkingNumber = "B9",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1168,6 +1292,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 60,
                             IsActive = true,
+                            Latitude = 43.854370000000003,
+                            Longitude = 18.413910000000001,
                             ParkingNumber = "B10",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1176,6 +1302,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 61,
                             IsActive = true,
+                            Latitude = 43.854240000000004,
+                            Longitude = 18.4131,
                             ParkingNumber = "C1",
                             ParkingSpotTypeId = 2,
                             ParkingZoneId = 2
@@ -1184,6 +1312,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 62,
                             IsActive = true,
+                            Latitude = 43.854240000000004,
+                            Longitude = 18.41319,
                             ParkingNumber = "C2",
                             ParkingSpotTypeId = 2,
                             ParkingZoneId = 2
@@ -1192,6 +1322,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 63,
                             IsActive = true,
+                            Latitude = 43.854240000000004,
+                            Longitude = 18.41328,
                             ParkingNumber = "C3",
                             ParkingSpotTypeId = 2,
                             ParkingZoneId = 2
@@ -1200,6 +1332,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 64,
                             IsActive = true,
+                            Latitude = 43.854240000000004,
+                            Longitude = 18.41337,
                             ParkingNumber = "C4",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1208,6 +1342,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 65,
                             IsActive = true,
+                            Latitude = 43.854240000000004,
+                            Longitude = 18.413460000000001,
                             ParkingNumber = "C5",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1216,6 +1352,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 66,
                             IsActive = true,
+                            Latitude = 43.854240000000004,
+                            Longitude = 18.413550000000001,
                             ParkingNumber = "C6",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1224,6 +1362,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 67,
                             IsActive = true,
+                            Latitude = 43.854240000000004,
+                            Longitude = 18.413640000000001,
                             ParkingNumber = "C7",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1232,6 +1372,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 68,
                             IsActive = true,
+                            Latitude = 43.854240000000004,
+                            Longitude = 18.413730000000001,
                             ParkingNumber = "C8",
                             ParkingSpotTypeId = 3,
                             ParkingZoneId = 2
@@ -1240,6 +1382,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 69,
                             IsActive = true,
+                            Latitude = 43.854240000000004,
+                            Longitude = 18.413820000000001,
                             ParkingNumber = "C9",
                             ParkingSpotTypeId = 3,
                             ParkingZoneId = 2
@@ -1248,6 +1392,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 70,
                             IsActive = true,
+                            Latitude = 43.854240000000004,
+                            Longitude = 18.413910000000001,
                             ParkingNumber = "C10",
                             ParkingSpotTypeId = 3,
                             ParkingZoneId = 2
@@ -1256,6 +1402,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 71,
                             IsActive = true,
+                            Latitude = 43.854109999999999,
+                            Longitude = 18.4131,
                             ParkingNumber = "D1",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1264,6 +1412,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 72,
                             IsActive = true,
+                            Latitude = 43.854109999999999,
+                            Longitude = 18.41319,
                             ParkingNumber = "D2",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1272,6 +1422,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 73,
                             IsActive = true,
+                            Latitude = 43.854109999999999,
+                            Longitude = 18.41328,
                             ParkingNumber = "D3",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1280,6 +1432,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 74,
                             IsActive = true,
+                            Latitude = 43.854109999999999,
+                            Longitude = 18.41337,
                             ParkingNumber = "D4",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1288,6 +1442,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 75,
                             IsActive = true,
+                            Latitude = 43.854109999999999,
+                            Longitude = 18.413460000000001,
                             ParkingNumber = "D5",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1296,6 +1452,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 76,
                             IsActive = true,
+                            Latitude = 43.854109999999999,
+                            Longitude = 18.413550000000001,
                             ParkingNumber = "D6",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1304,6 +1462,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 77,
                             IsActive = true,
+                            Latitude = 43.854109999999999,
+                            Longitude = 18.413640000000001,
                             ParkingNumber = "D7",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1312,6 +1472,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 78,
                             IsActive = true,
+                            Latitude = 43.854109999999999,
+                            Longitude = 18.413730000000001,
                             ParkingNumber = "D8",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1320,6 +1482,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 79,
                             IsActive = true,
+                            Latitude = 43.854109999999999,
+                            Longitude = 18.413820000000001,
                             ParkingNumber = "D9",
                             ParkingSpotTypeId = 1,
                             ParkingZoneId = 2
@@ -1328,6 +1492,8 @@ namespace MoSmartPark.Services.Migrations
                         {
                             Id = 80,
                             IsActive = true,
+                            Latitude = 43.854109999999999,
+                            Longitude = 18.413910000000001,
                             ParkingNumber = "D10",
                             ParkingSpotTypeId = 5,
                             ParkingZoneId = 2

@@ -9,6 +9,8 @@ namespace MoSmartPark.Model.Responses
         public int ParkingZoneId { get; set; }
         public string ParkingZoneName { get; set; } = string.Empty;
         public bool IsActive { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 }
 

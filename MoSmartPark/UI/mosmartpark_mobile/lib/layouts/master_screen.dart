@@ -5,6 +5,7 @@ import 'package:mosmartpark_mobile/screens/cars_list_screen.dart';
 import 'package:mosmartpark_mobile/screens/review_list_screen.dart';
 import 'package:mosmartpark_mobile/screens/home_screen.dart';
 import 'package:mosmartpark_mobile/screens/my_reservations_screen.dart';
+import 'package:mosmartpark_mobile/screens/parking_map_screen.dart';
 import 'package:mosmartpark_mobile/screens/settings_screen.dart';
 
 class MasterScreen extends StatefulWidget {
@@ -16,7 +17,8 @@ class MasterScreen extends StatefulWidget {
   State<MasterScreen> createState() => _MasterScreenState();
 }
 
-class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderStateMixin {
+class _MasterScreenState extends State<MasterScreen>
+    with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -24,6 +26,7 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
 
   final List<String> _menuTitles = [
     'Home',
+    'Parking Mapa',
     'My Reservations',
     'Cars',
     'Reviews',
@@ -33,6 +36,7 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
 
   final List<IconData> _menuIcons = [
     Icons.home_rounded,
+    Icons.map_rounded,
     Icons.calendar_today_rounded,
     Icons.directions_car_rounded,
     Icons.rate_review_rounded,
@@ -42,6 +46,7 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
 
   final List<Widget> _screens = [
     const HomeScreen(),
+    const ParkingMapScreen(),
     const MyReservationsScreen(),
     const CarsListScreen(),
     const ReviewListScreen(),
@@ -57,20 +62,15 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
       vsync: this,
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.3, 0),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0.3, 0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
     _animationController.forward();
   }
 
@@ -95,9 +95,7 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
@@ -136,7 +134,7 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Title
               const Text(
                 "Logout",
@@ -148,7 +146,7 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               // Message
               Text(
                 "Are you sure you want to logout?",
@@ -160,7 +158,7 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 28),
-              
+
               // Buttons
               Row(
                 children: [
@@ -169,10 +167,7 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                       onPressed: () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.grey[700],
-                        side: BorderSide(
-                          color: Colors.grey[300]!,
-                          width: 1.5,
-                        ),
+                        side: BorderSide(color: Colors.grey[300]!, width: 1.5),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -194,7 +189,9 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                       onPressed: () {
                         Navigator.of(context).pop(); // Close dialog
                         // Navigate back to login by popping all routes
-                        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                        Navigator.of(
+                          context,
+                        ).pushNamedAndRemoveUntil('/', (route) => false);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF8B6F47),
@@ -348,11 +345,19 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                                   ),
                                   child: CircleAvatar(
                                     radius: 32,
-                                    backgroundColor: Colors.white.withOpacity(0.15),
-                                    backgroundImage: user?.picture != null && user!.picture!.isNotEmpty
-                                        ? ProfileScreen.getUserImageProvider(user.picture)
+                                    backgroundColor: Colors.white.withOpacity(
+                                      0.15,
+                                    ),
+                                    backgroundImage:
+                                        user?.picture != null &&
+                                            user!.picture!.isNotEmpty
+                                        ? ProfileScreen.getUserImageProvider(
+                                            user.picture,
+                                          )
                                         : null,
-                                    child: user?.picture == null || user!.picture!.isEmpty
+                                    child:
+                                        user?.picture == null ||
+                                            user!.picture!.isEmpty
                                         ? const Icon(
                                             Icons.person_rounded,
                                             color: Colors.white,
@@ -379,7 +384,8 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                                       child: Transform.translate(
                                         offset: Offset(20 * (1 - value), 0),
                                         child: Text(
-                                          '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim(),
+                                          '${user?.firstName ?? ''} ${user?.lastName ?? ''}'
+                                              .trim(),
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 18,
@@ -415,13 +421,18 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                                               vertical: 4,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.2),
-                                              borderRadius: BorderRadius.circular(8),
+                                              color: Colors.white.withOpacity(
+                                                0.2,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
                                             child: Text(
                                               '@${user.username}',
                                               style: TextStyle(
-                                                color: Colors.white.withOpacity(0.9),
+                                                color: Colors.white.withOpacity(
+                                                  0.9,
+                                                ),
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w500,
                                                 letterSpacing: 0.3,
@@ -440,9 +451,9 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Menu Items with Modern Design
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -488,9 +499,9 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Divider with Gradient
                 Container(
                   height: 1,
@@ -505,34 +516,43 @@ class _MasterScreenState extends State<MasterScreen> with SingleTickerProviderSt
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Logout Button with Modern Design
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.3, 0),
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: _animationController,
-                        curve: const Interval(0.7, 1.0, curve: Curves.easeOut),
-                      ),
-                    ),
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0.3, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: _animationController,
+                            curve: const Interval(
+                              0.7,
+                              1.0,
+                              curve: Curves.easeOut,
+                            ),
+                          ),
+                        ),
                     child: FadeTransition(
                       opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
                         CurvedAnimation(
                           parent: _animationController,
-                          curve: const Interval(0.7, 1.0, curve: Curves.easeOut),
+                          curve: const Interval(
+                            0.7,
+                            1.0,
+                            curve: Curves.easeOut,
+                          ),
                         ),
                       ),
                       child: _buildAnimatedLogoutTile(),
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
               ],
             ),
@@ -615,9 +635,10 @@ class _AnimatedDrawerTileState extends State<_AnimatedDrawerTile>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.96,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -660,28 +681,20 @@ class _AnimatedDrawerTileState extends State<_AnimatedDrawerTile>
                     ],
                   )
                 : _isPressed
-                    ? LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Colors.white.withOpacity(0.15),
-                          Colors.white.withOpacity(0.08),
-                        ],
-                      )
-                    : null,
-            color: widget.isSelected || _isPressed
-                ? null
-                : Colors.transparent,
+                ? LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Colors.white.withOpacity(0.15),
+                      Colors.white.withOpacity(0.08),
+                    ],
+                  )
+                : null,
+            color: widget.isSelected || _isPressed ? null : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
             border: widget.isSelected
-                ? Border.all(
-                    color: Colors.white.withOpacity(0.4),
-                    width: 1.5,
-                  )
-                : Border.all(
-                    color: Colors.transparent,
-                    width: 1.5,
-                  ),
+                ? Border.all(color: Colors.white.withOpacity(0.4), width: 1.5)
+                : Border.all(color: Colors.transparent, width: 1.5),
             boxShadow: widget.isSelected
                 ? [
                     BoxShadow(

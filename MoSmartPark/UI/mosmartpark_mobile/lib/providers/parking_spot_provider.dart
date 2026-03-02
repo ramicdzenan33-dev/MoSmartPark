@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mosmartpark_mobile/model/parking_spot.dart';
+import 'package:mosmartpark_mobile/model/parking_spot_availability.dart';
 import 'package:mosmartpark_mobile/providers/base_provider.dart';
 
 class ParkingSpotProvider extends BaseProvider<ParkingSpot> {
@@ -9,6 +10,24 @@ class ParkingSpotProvider extends BaseProvider<ParkingSpot> {
   @override
   ParkingSpot fromJson(dynamic json) {
     return ParkingSpot.fromJson(json);
+  }
+
+  /// Get parking spot availability (free/occupied) for all spots with coordinates
+  Future<List<ParkingSpotAvailability>> getAvailability() async {
+    var baseUrl = BaseProvider.baseUrl ?? "http://10.0.2.2:5130/";
+    var uri = Uri.parse("$baseUrl$endpoint/availability");
+    var headers = createHeaders();
+
+    var response = await http.get(uri, headers: headers);
+
+    if (isValidResponse(response)) {
+      var data = jsonDecode(response.body) as List;
+      return data
+          .map((item) => ParkingSpotAvailability.fromJson(item))
+          .toList();
+    } else {
+      return [];
+    }
   }
 
   /// Get recommended parking spot for a user in a specific zone
@@ -20,13 +39,15 @@ class ParkingSpotProvider extends BaseProvider<ParkingSpot> {
     DateTime? endDate,
   }) async {
     var baseUrl = BaseProvider.baseUrl ?? "http://10.0.2.2:5130/";
-    var uri = Uri.parse("$baseUrl$endpoint/recommend/$userId/$parkingZoneId").replace(
-      queryParameters: {
-        if (reservationTypeId != null) 'reservationTypeId': reservationTypeId.toString(),
-        if (startDate != null) 'startDate': startDate.toIso8601String(),
-        if (endDate != null) 'endDate': endDate.toIso8601String(),
-      },
-    );
+    var uri = Uri.parse("$baseUrl$endpoint/recommend/$userId/$parkingZoneId")
+        .replace(
+          queryParameters: {
+            if (reservationTypeId != null)
+              'reservationTypeId': reservationTypeId.toString(),
+            if (startDate != null) 'startDate': startDate.toIso8601String(),
+            if (endDate != null) 'endDate': endDate.toIso8601String(),
+          },
+        );
     var headers = createHeaders();
 
     var response = await http.get(uri, headers: headers);
@@ -40,4 +61,3 @@ class ParkingSpotProvider extends BaseProvider<ParkingSpot> {
     }
   }
 }
-

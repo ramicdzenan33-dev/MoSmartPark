@@ -382,78 +382,95 @@ namespace MoSmartPark.Services.Database
             // Row B: B1-B2 (Electric next to each other), B3-B10 (Regular)
             // Row C: C1-C3 (Compact), C4-C7 (Regular), C8-C10 (Large)
             // Row D: D1-D9 (Regular), D10 (Disabled corner)
+            // Coordinates: Sarajevo area (~43.856°N, 18.413°E)
             var allSpots = new List<ParkingSpot>();
             int spotId = 1;
 
+            // Zone 1 base coordinates (North Wing - near BBI Centar, Sarajevo)
+            double zone1BaseLat = 43.8563;
+            double zone1BaseLng = 18.4131;
+            // Zone 2 base coordinates (South Wing - offset ~200m south)
+            double zone2BaseLat = 43.8545;
+            double zone2BaseLng = 18.4131;
+
+            // Row offsets (A=0, B=1, C=2, D=3) - each row ~15m apart
+            double rowOffset = 0.00013; // ~15m in latitude
+            // Column offsets (1-10) - each column ~8m apart
+            double colOffset = 0.00009; // ~8m in longitude
+
+            // Helper to compute coordinates
+            double GetLat(double baseLat, int row) => baseLat - (row * rowOffset);
+            double GetLng(double baseLng, int col) => baseLng + ((col - 1) * colOffset);
+
             // North Wing (Zone 1)
-            // Row A
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "A1", ParkingSpotTypeId = 5, ParkingZoneId = 1, IsActive = true }); // Disabled
+            // Row A (row index 0)
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "A1", ParkingSpotTypeId = 5, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 0), Longitude = GetLng(zone1BaseLng, 1) }); // Disabled
             for (int i = 2; i <= 10; i++)
             {
-                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"A{i}", ParkingSpotTypeId = 1, ParkingZoneId = 1, IsActive = true }); // Regular
+                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"A{i}", ParkingSpotTypeId = 1, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 0), Longitude = GetLng(zone1BaseLng, i) }); // Regular
             }
 
-            // Row B
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "B1", ParkingSpotTypeId = 4, ParkingZoneId = 1, IsActive = true }); // Electric
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "B2", ParkingSpotTypeId = 4, ParkingZoneId = 1, IsActive = true }); // Electric
+            // Row B (row index 1)
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "B1", ParkingSpotTypeId = 4, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 1), Longitude = GetLng(zone1BaseLng, 1) }); // Electric
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "B2", ParkingSpotTypeId = 4, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 1), Longitude = GetLng(zone1BaseLng, 2) }); // Electric
             for (int i = 3; i <= 10; i++)
             {
-                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"B{i}", ParkingSpotTypeId = 1, ParkingZoneId = 1, IsActive = true }); // Regular
+                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"B{i}", ParkingSpotTypeId = 1, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 1), Longitude = GetLng(zone1BaseLng, i) }); // Regular
             }
 
-            // Row C
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C1", ParkingSpotTypeId = 2, ParkingZoneId = 1, IsActive = true }); // Compact
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C2", ParkingSpotTypeId = 2, ParkingZoneId = 1, IsActive = true }); // Compact
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C3", ParkingSpotTypeId = 2, ParkingZoneId = 1, IsActive = true }); // Compact
+            // Row C (row index 2)
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C1", ParkingSpotTypeId = 2, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 2), Longitude = GetLng(zone1BaseLng, 1) }); // Compact
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C2", ParkingSpotTypeId = 2, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 2), Longitude = GetLng(zone1BaseLng, 2) }); // Compact
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C3", ParkingSpotTypeId = 2, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 2), Longitude = GetLng(zone1BaseLng, 3) }); // Compact
             for (int i = 4; i <= 7; i++)
             {
-                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"C{i}", ParkingSpotTypeId = 1, ParkingZoneId = 1, IsActive = true }); // Regular
+                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"C{i}", ParkingSpotTypeId = 1, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 2), Longitude = GetLng(zone1BaseLng, i) }); // Regular
             }
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C8", ParkingSpotTypeId = 3, ParkingZoneId = 1, IsActive = true }); // Large
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C9", ParkingSpotTypeId = 3, ParkingZoneId = 1, IsActive = true }); // Large
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C10", ParkingSpotTypeId = 3, ParkingZoneId = 1, IsActive = true }); // Large
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C8", ParkingSpotTypeId = 3, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 2), Longitude = GetLng(zone1BaseLng, 8) }); // Large
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C9", ParkingSpotTypeId = 3, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 2), Longitude = GetLng(zone1BaseLng, 9) }); // Large
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C10", ParkingSpotTypeId = 3, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 2), Longitude = GetLng(zone1BaseLng, 10) }); // Large
 
-            // Row D
+            // Row D (row index 3)
             for (int i = 1; i <= 9; i++)
             {
-                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"D{i}", ParkingSpotTypeId = 1, ParkingZoneId = 1, IsActive = true }); // Regular
+                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"D{i}", ParkingSpotTypeId = 1, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 3), Longitude = GetLng(zone1BaseLng, i) }); // Regular
             }
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "D10", ParkingSpotTypeId = 5, ParkingZoneId = 1, IsActive = true }); // Disabled
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "D10", ParkingSpotTypeId = 5, ParkingZoneId = 1, IsActive = true, Latitude = GetLat(zone1BaseLat, 3), Longitude = GetLng(zone1BaseLng, 10) }); // Disabled
 
-            // South Wing (Zone 2) - same pattern
-            // Row A
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "A1", ParkingSpotTypeId = 5, ParkingZoneId = 2, IsActive = true }); // Disabled
+            // South Wing (Zone 2) - same pattern, offset south
+            // Row A (row index 0)
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "A1", ParkingSpotTypeId = 5, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 0), Longitude = GetLng(zone2BaseLng, 1) }); // Disabled
             for (int i = 2; i <= 10; i++)
             {
-                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"A{i}", ParkingSpotTypeId = 1, ParkingZoneId = 2, IsActive = true }); // Regular
+                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"A{i}", ParkingSpotTypeId = 1, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 0), Longitude = GetLng(zone2BaseLng, i) }); // Regular
             }
 
-            // Row B
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "B1", ParkingSpotTypeId = 4, ParkingZoneId = 2, IsActive = true }); // Electric
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "B2", ParkingSpotTypeId = 4, ParkingZoneId = 2, IsActive = true }); // Electric
+            // Row B (row index 1)
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "B1", ParkingSpotTypeId = 4, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 1), Longitude = GetLng(zone2BaseLng, 1) }); // Electric
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "B2", ParkingSpotTypeId = 4, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 1), Longitude = GetLng(zone2BaseLng, 2) }); // Electric
             for (int i = 3; i <= 10; i++)
             {
-                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"B{i}", ParkingSpotTypeId = 1, ParkingZoneId = 2, IsActive = true }); // Regular
+                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"B{i}", ParkingSpotTypeId = 1, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 1), Longitude = GetLng(zone2BaseLng, i) }); // Regular
             }
 
-            // Row C
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C1", ParkingSpotTypeId = 2, ParkingZoneId = 2, IsActive = true }); // Compact
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C2", ParkingSpotTypeId = 2, ParkingZoneId = 2, IsActive = true }); // Compact
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C3", ParkingSpotTypeId = 2, ParkingZoneId = 2, IsActive = true }); // Compact
+            // Row C (row index 2)
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C1", ParkingSpotTypeId = 2, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 2), Longitude = GetLng(zone2BaseLng, 1) }); // Compact
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C2", ParkingSpotTypeId = 2, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 2), Longitude = GetLng(zone2BaseLng, 2) }); // Compact
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C3", ParkingSpotTypeId = 2, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 2), Longitude = GetLng(zone2BaseLng, 3) }); // Compact
             for (int i = 4; i <= 7; i++)
             {
-                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"C{i}", ParkingSpotTypeId = 1, ParkingZoneId = 2, IsActive = true }); // Regular
+                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"C{i}", ParkingSpotTypeId = 1, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 2), Longitude = GetLng(zone2BaseLng, i) }); // Regular
             }
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C8", ParkingSpotTypeId = 3, ParkingZoneId = 2, IsActive = true }); // Large
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C9", ParkingSpotTypeId = 3, ParkingZoneId = 2, IsActive = true }); // Large
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C10", ParkingSpotTypeId = 3, ParkingZoneId = 2, IsActive = true }); // Large
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C8", ParkingSpotTypeId = 3, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 2), Longitude = GetLng(zone2BaseLng, 8) }); // Large
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C9", ParkingSpotTypeId = 3, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 2), Longitude = GetLng(zone2BaseLng, 9) }); // Large
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "C10", ParkingSpotTypeId = 3, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 2), Longitude = GetLng(zone2BaseLng, 10) }); // Large
 
-            // Row D
+            // Row D (row index 3)
             for (int i = 1; i <= 9; i++)
             {
-                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"D{i}", ParkingSpotTypeId = 1, ParkingZoneId = 2, IsActive = true }); // Regular
+                allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = $"D{i}", ParkingSpotTypeId = 1, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 3), Longitude = GetLng(zone2BaseLng, i) }); // Regular
             }
-            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "D10", ParkingSpotTypeId = 5, ParkingZoneId = 2, IsActive = true }); // Disabled
+            allSpots.Add(new ParkingSpot { Id = spotId++, ParkingNumber = "D10", ParkingSpotTypeId = 5, ParkingZoneId = 2, IsActive = true, Latitude = GetLat(zone2BaseLat, 3), Longitude = GetLng(zone2BaseLng, 10) }); // Disabled
 
             modelBuilder.Entity<ParkingSpot>().HasData(allSpots);
 

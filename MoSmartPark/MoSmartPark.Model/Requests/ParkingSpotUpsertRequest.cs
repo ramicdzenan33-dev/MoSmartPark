@@ -15,6 +15,9 @@ namespace MoSmartPark.Model.Requests
         public int ParkingZoneId { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 }
 

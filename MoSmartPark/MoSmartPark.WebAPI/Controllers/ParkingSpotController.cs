@@ -48,6 +48,23 @@ namespace MoSmartPark.WebAPI.Controllers
 
             return recommendation;
         }
+
+        /// <summary>
+        /// Get parking spot availability for a zone and time range
+        /// </summary>
+        [AllowAnonymous]
+        [HttpGet("availability")]
+        public async Task<ActionResult<List<ParkingSpotAvailabilityResponse>>> GetAvailability(
+            [FromQuery] int? zoneId = null,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
+        {
+            var start = startDate ?? DateTime.UtcNow;
+            var end = endDate ?? start.AddHours(1);
+
+            var result = await _parkingSpotService.GetAvailabilityAsync(zoneId, start, end);
+            return Ok(result);
+        }
     }
 }
 
