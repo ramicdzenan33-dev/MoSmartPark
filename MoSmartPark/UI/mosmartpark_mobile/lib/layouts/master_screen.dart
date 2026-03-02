@@ -26,7 +26,7 @@ class _MasterScreenState extends State<MasterScreen>
 
   final List<String> _menuTitles = [
     'Home',
-    'Parking Mapa',
+    'Parking Map',
     'My Reservations',
     'Cars',
     'Reviews',
