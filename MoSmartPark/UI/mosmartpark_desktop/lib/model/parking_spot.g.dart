@@ -14,6 +14,8 @@ ParkingSpot _$ParkingSpotFromJson(Map<String, dynamic> json) => ParkingSpot(
   parkingZoneId: (json['parkingZoneId'] as num?)?.toInt() ?? 0,
   parkingZoneName: json['parkingZoneName'] as String? ?? '',
   isActive: json['isActive'] as bool? ?? true,
+  latitude: (json['latitude'] as num?)?.toDouble(),
+  longitude: (json['longitude'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$ParkingSpotToJson(ParkingSpot instance) =>
@@ -25,4 +27,6 @@ Map<String, dynamic> _$ParkingSpotToJson(ParkingSpot instance) =>
       'parkingZoneId': instance.parkingZoneId,
       'parkingZoneName': instance.parkingZoneName,
       'isActive': instance.isActive,
+      'latitude': instance.latitude,
+      'longitude': instance.longitude,
     };

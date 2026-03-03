@@ -2,16 +2,53 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:mosmartpark_desktop/layouts/master_screen.dart';
 import 'package:mosmartpark_desktop/model/reservation.dart';
+import 'package:mosmartpark_desktop/model/parking_spot.dart';
+import 'package:mosmartpark_desktop/providers/parking_spot_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 // Brown color scheme matching the app
 const Color _brownPrimary = Color(0xFF8B6F47);
 const Color _brownDark = Color(0xFF6B5434);
 
-class ReservationDetailsScreen extends StatelessWidget {
+class ReservationDetailsScreen extends StatefulWidget {
   final Reservation reservation;
 
   const ReservationDetailsScreen({super.key, required this.reservation});
+
+  @override
+  State<ReservationDetailsScreen> createState() =>
+      _ReservationDetailsScreenState();
+}
+
+class _ReservationDetailsScreenState extends State<ReservationDetailsScreen> {
+  ParkingSpot? _parkingSpot;
+  bool _isLoadingSpot = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadParkingSpot());
+  }
+
+  Future<void> _loadParkingSpot() async {
+    try {
+      final provider = context.read<ParkingSpotProvider>();
+      final spot = await provider.getById(widget.reservation.parkingSpotId);
+      if (mounted) {
+        setState(() {
+          _parkingSpot = spot;
+          _isLoadingSpot = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingSpot = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +56,12 @@ class ReservationDetailsScreen extends StatelessWidget {
       title: 'Reservation Details',
       showBackButton: true,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: 120,
+        ),
         child: _buildReservationDetails(context),
       ),
     );
@@ -27,9 +69,10 @@ class ReservationDetailsScreen extends StatelessWidget {
 
   Widget _buildReservationDetails(BuildContext context) {
     ImageProvider? imageProvider;
-    if (reservation.userPicture != null && reservation.userPicture!.isNotEmpty) {
+    if (widget.reservation.userPicture != null &&
+        widget.reservation.userPicture!.isNotEmpty) {
       try {
-        final sanitized = reservation.userPicture!.replaceAll(
+        final sanitized = widget.reservation.userPicture!.replaceAll(
           RegExp(r'^data:image/[^;]+;base64,'),
           '',
         );
@@ -52,10 +95,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    _brownPrimary,
-                    _brownDark,
-                  ],
+                  colors: [_brownPrimary, _brownDark],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
@@ -134,7 +174,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Reservation #${reservation.id}',
+                                    'Reservation #${widget.reservation.id}',
                                     style: const TextStyle(
                                       fontSize: 42,
                                       fontWeight: FontWeight.w800,
@@ -182,6 +222,9 @@ class ReservationDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 40),
                       // Details grid
                       _buildInfoGrid(imageProvider),
+                      const SizedBox(height: 40),
+                      // Map section
+                      _buildMapSection(),
                     ],
                   ),
                 ),
@@ -193,6 +236,147 @@ class ReservationDetailsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildMapSection() {
+    if (_isLoadingSpot) {
+      return Container(
+        height: 250,
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_parkingSpot == null ||
+        _parkingSpot!.latitude == null ||
+        _parkingSpot!.longitude == null) {
+      return const SizedBox.shrink();
+    }
+
+    final spotLatLng = LatLng(
+      _parkingSpot!.latitude!,
+      _parkingSpot!.longitude!,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'SPOT LOCATION',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF2D2D2D),
+            letterSpacing: 1.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          height: 280,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey[200]!, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: _brownPrimary.withOpacity(0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              children: [
+                FlutterMap(
+                  options: MapOptions(
+                    initialCenter: spotLatLng,
+                    initialZoom: 17.5,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.mosmartpark.desktop',
+                    ),
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: spotLatLng,
+                          width: 44,
+                          height: 44,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: _brownPrimary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _brownPrimary.withOpacity(0.5),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.local_parking,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                // Spot label overlay
+                Positioned(
+                  bottom: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.location_on, color: _brownPrimary, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Spot ${_parkingSpot!.parkingNumber}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: _brownPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildModernInfoCard(ImageProvider? imageProvider) {
     return Container(
       padding: const EdgeInsets.all(32),
@@ -200,16 +384,10 @@ class ReservationDetailsScreen extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Colors.grey[50]!,
-            Colors.white,
-          ],
+          colors: [Colors.grey[50]!, Colors.white],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
       ),
       child: Row(
         children: [
@@ -222,10 +400,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                   ? const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        _brownPrimary,
-                        _brownDark,
-                      ],
+                      colors: [_brownPrimary, _brownDark],
                     )
                   : null,
               color: imageProvider != null ? Colors.transparent : null,
@@ -271,7 +446,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '#${reservation.id}',
+                  '#${widget.reservation.id}',
                   style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w800,
@@ -287,10 +462,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [
-                        _brownPrimary,
-                        _brownDark,
-                      ],
+                      colors: [_brownPrimary, _brownDark],
                     ),
                     borderRadius: BorderRadius.circular(2),
                   ),
@@ -322,7 +494,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '\$${reservation.finalPrice.toStringAsFixed(2)}',
+                      '\$${widget.reservation.finalPrice.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
@@ -370,9 +542,11 @@ class ReservationDetailsScreen extends StatelessWidget {
               child: _buildInfoItem(
                 icon: Icons.directions_car_outlined,
                 label: 'Car',
-                value: reservation.carBrandName != null && reservation.carModel != null
-                    ? '${reservation.carBrandName} ${reservation.carModel}'
-                    : reservation.carModel ?? 'N/A',
+                value:
+                    widget.reservation.carBrandName != null &&
+                        widget.reservation.carModel != null
+                    ? '${widget.reservation.carBrandName} ${widget.reservation.carModel}'
+                    : widget.reservation.carModel ?? 'N/A',
                 iconColor: _brownPrimary,
               ),
             ),
@@ -381,7 +555,7 @@ class ReservationDetailsScreen extends StatelessWidget {
               child: _buildInfoItem(
                 icon: Icons.person_outlined,
                 label: 'Client',
-                value: reservation.userFullName ?? 'N/A',
+                value: widget.reservation.userFullName ?? 'N/A',
                 iconColor: _brownPrimary,
               ),
             ),
@@ -394,7 +568,7 @@ class ReservationDetailsScreen extends StatelessWidget {
               child: _buildInfoItem(
                 icon: Icons.confirmation_number_outlined,
                 label: 'License Plate',
-                value: reservation.carLicensePlate ?? 'N/A',
+                value: widget.reservation.carLicensePlate ?? 'N/A',
                 iconColor: _brownPrimary,
               ),
             ),
@@ -403,9 +577,9 @@ class ReservationDetailsScreen extends StatelessWidget {
               child: _buildInfoItem(
                 icon: Icons.palette_outlined,
                 label: 'Car Color',
-                value: reservation.carColorName ?? 'N/A',
-                iconColor: reservation.carColorHexCode != null
-                    ? _parseColor(reservation.carColorHexCode!)
+                value: widget.reservation.carColorName ?? 'N/A',
+                iconColor: widget.reservation.carColorHexCode != null
+                    ? _parseColor(widget.reservation.carColorHexCode!)
                     : _brownPrimary,
               ),
             ),
@@ -418,7 +592,7 @@ class ReservationDetailsScreen extends StatelessWidget {
               child: _buildInfoItem(
                 icon: Icons.local_parking_outlined,
                 label: 'Parking Spot',
-                value: reservation.parkingSpotNumber ?? 'N/A',
+                value: widget.reservation.parkingSpotNumber ?? 'N/A',
                 iconColor: _brownPrimary,
               ),
             ),
@@ -427,7 +601,7 @@ class ReservationDetailsScreen extends StatelessWidget {
               child: _buildInfoItem(
                 icon: Icons.event_available_outlined,
                 label: 'Reservation Type',
-                value: reservation.reservationTypeName ?? 'N/A',
+                value: widget.reservation.reservationTypeName ?? 'N/A',
                 iconColor: _brownPrimary,
               ),
             ),
@@ -440,8 +614,10 @@ class ReservationDetailsScreen extends StatelessWidget {
               child: _buildInfoItem(
                 icon: Icons.calendar_today_outlined,
                 label: 'Start Date',
-                value: reservation.startDate != null
-                    ? DateFormat('yyyy-MM-dd HH:mm').format(reservation.startDate!)
+                value: widget.reservation.startDate != null
+                    ? DateFormat(
+                        'yyyy-MM-dd HH:mm',
+                      ).format(widget.reservation.startDate!)
                     : 'N/A',
                 iconColor: _brownPrimary,
               ),
@@ -451,8 +627,10 @@ class ReservationDetailsScreen extends StatelessWidget {
               child: _buildInfoItem(
                 icon: Icons.event_outlined,
                 label: 'End Date',
-                value: reservation.endDate != null
-                    ? DateFormat('yyyy-MM-dd HH:mm').format(reservation.endDate!)
+                value: widget.reservation.endDate != null
+                    ? DateFormat(
+                        'yyyy-MM-dd HH:mm',
+                      ).format(widget.reservation.endDate!)
                     : 'N/A',
                 iconColor: _brownPrimary,
               ),
@@ -466,7 +644,9 @@ class ReservationDetailsScreen extends StatelessWidget {
               child: _buildInfoItem(
                 icon: Icons.access_time_outlined,
                 label: 'Created At',
-                value: DateFormat('yyyy-MM-dd HH:mm').format(reservation.createdAt),
+                value: DateFormat(
+                  'yyyy-MM-dd HH:mm',
+                ).format(widget.reservation.createdAt),
                 iconColor: _brownPrimary,
               ),
             ),
@@ -475,7 +655,7 @@ class ReservationDetailsScreen extends StatelessWidget {
               child: _buildInfoItem(
                 icon: Icons.person_rounded,
                 label: 'Client Picture',
-                value: reservation.userFullName ?? 'N/A',
+                value: widget.reservation.userFullName ?? 'N/A',
                 iconColor: _brownPrimary,
                 showImage: true,
                 imageProvider: imageProvider,
@@ -508,10 +688,7 @@ class ReservationDetailsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 1.5,
-        ),
+        border: Border.all(color: Colors.grey[200]!, width: 1.5),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -521,10 +698,7 @@ class ReservationDetailsScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: iconColor.withOpacity(0.12),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: iconColor.withOpacity(0.3),
-                width: 1.5,
-              ),
+              border: Border.all(color: iconColor.withOpacity(0.3), width: 1.5),
             ),
             child: Icon(icon, color: iconColor, size: 20),
           ),
@@ -552,10 +726,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                             color: Colors.grey[200],
                             shape: BoxShape.circle,
                           ),
-                          child: Image(
-                            image: imageProvider,
-                            fit: BoxFit.cover,
-                          ),
+                          child: Image(image: imageProvider, fit: BoxFit.cover),
                         ),
                       )
                     : Text(
@@ -575,4 +746,3 @@ class ReservationDetailsScreen extends StatelessWidget {
     );
   }
 }
-

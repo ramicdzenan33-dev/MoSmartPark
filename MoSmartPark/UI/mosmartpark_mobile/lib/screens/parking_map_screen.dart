@@ -20,8 +20,8 @@ class _ParkingMapScreenState extends State<ParkingMapScreen> {
   Timer? _refreshTimer;
   final MapController _mapController = MapController();
 
-  // Sarajevo center
-  static const _initialCenter = LatLng(43.8563, 18.4131);
+  // Mostar center
+  static const _initialCenter = LatLng(43.3430, 17.8078);
   static const _initialZoom = 15.0;
 
   @override

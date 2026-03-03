@@ -73,6 +73,12 @@ namespace MoSmartPark.Services.Services
             var spots = new List<ParkingSpot>();
             int spotNumber = 1;
 
+            // Base coordinates in Mostar area, offset by zone ID to avoid overlap
+            double baseLat = 43.3395 - (zone.Id * 0.002);
+            double baseLng = 17.8078;
+            double rowOffset = 0.00013;  // ~15m between rows
+            double colOffset = 0.00009;  // ~8m between columns
+
             // Generate row letters (A, B, C, ..., Z)
             for (int row = 0; row < request.Rows; row++)
             {
@@ -86,7 +92,9 @@ namespace MoSmartPark.Services.Services
                         ParkingNumber = $"{rowLetter}{col}",
                         ParkingSpotTypeId = regularSpotTypeId,
                         ParkingZoneId = zone.Id,
-                        IsActive = true
+                        IsActive = true,
+                        Latitude = baseLat + (row * rowOffset),
+                        Longitude = baseLng + ((col - 1) * colOffset)
                     });
                 }
             }

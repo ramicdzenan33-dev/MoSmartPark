@@ -9,6 +9,8 @@ import 'package:mosmartpark_desktop/providers/parking_spot_provider.dart';
 import 'package:mosmartpark_desktop/providers/parking_spot_type_provider.dart';
 import 'package:mosmartpark_desktop/providers/reservation_provider.dart';
 import 'package:mosmartpark_desktop/layouts/master_screen.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 // Brown color scheme matching the app
 const Color _brownPrimary = Color(0xFF8B6F47);
@@ -34,7 +36,8 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
   List<Reservation> reservations = [];
   Map<String, List<ParkingSpot>> groupedSpots = {};
   Map<int, ParkingSpotType> spotTypesMap = {};
-  Map<int, List<Reservation>> spotReservationsMap = {}; // Map spot ID to reservations for selected day
+  Map<int, List<Reservation>> spotReservationsMap =
+      {}; // Map spot ID to reservations for selected day
   DateTime selectedDate = DateTime.now();
   bool isLoading = true;
   String? errorMessage;
@@ -60,9 +63,11 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
       });
 
       // Load zones
-      final zonesResult = await parkingZoneProvider.get(filter: {"pageSize": 1000, "isActive": true});
+      final zonesResult = await parkingZoneProvider.get(
+        filter: {"pageSize": 1000, "isActive": true},
+      );
       final zonesList = zonesResult.items ?? [];
-      
+
       if (zonesList.isEmpty) {
         setState(() {
           isLoading = false;
@@ -78,33 +83,49 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
               orElse: () => zonesList.first,
             )
           : zonesList.first;
-      
+
       // Update selected zone ID
       final zoneIdToLoad = zoneToLoad.id;
 
       // Load spot types
-      final typesResult = await parkingSpotTypeProvider.get(filter: {"pageSize": 1000});
+      final typesResult = await parkingSpotTypeProvider.get(
+        filter: {"pageSize": 1000},
+      );
       final spotTypesList = typesResult.items ?? [];
 
       // Load spots for selected zone
-      final spotsResult = await parkingSpotProvider.get(filter: {
-        "parkingZoneId": zoneToLoad.id,
-        "pageSize": 1000,
-      });
+      final spotsResult = await parkingSpotProvider.get(
+        filter: {"parkingZoneId": zoneToLoad.id, "pageSize": 1000},
+      );
 
       // Load reservations for selected zone and date range
       // Use date range that includes the selected date to get all potentially overlapping reservations
-      final startOfDay = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
-      final endOfDay = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 23, 59, 59);
-      
+      final startOfDay = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+      );
+      final endOfDay = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        23,
+        59,
+        59,
+      );
+
       // Get reservations that might overlap with selected date
       // We check: reservations that start before or on the selected date and end after or on the selected date
-      final reservationsResult = await reservationProvider.get(filter: {
-        "startDateTo": endOfDay.toIso8601String(), // Reservations that start before/on selected date
-        "endDateFrom": startOfDay.toIso8601String(), // Reservations that end after/on selected date
-        "pageSize": 1000,
-        "includePictures": false, // Optimize payload
-      });
+      final reservationsResult = await reservationProvider.get(
+        filter: {
+          "startDateTo": endOfDay
+              .toIso8601String(), // Reservations that start before/on selected date
+          "endDateFrom": startOfDay
+              .toIso8601String(), // Reservations that end after/on selected date
+          "pageSize": 1000,
+          "includePictures": false, // Optimize payload
+        },
+      );
 
       // Process spots
       Map<String, List<ParkingSpot>> grouped = {};
@@ -134,10 +155,16 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
         // Check if reservation is for a spot in the selected zone and active for selected date
         final spot = spotsList.firstWhere(
           (s) => s.id == reservation.parkingSpotId,
-          orElse: () => ParkingSpot(id: -1, parkingNumber: '', parkingSpotTypeId: 0, parkingZoneId: 0),
+          orElse: () => ParkingSpot(
+            id: -1,
+            parkingNumber: '',
+            parkingSpotTypeId: 0,
+            parkingZoneId: 0,
+          ),
         );
-        
-        if (spot.id != -1 && spot.parkingZoneId == zoneIdToLoad &&
+
+        if (spot.id != -1 &&
+            spot.parkingZoneId == zoneIdToLoad &&
             _isReservationActiveForDate(reservation, selectedDate)) {
           if (!spotReservations.containsKey(reservation.parkingSpotId)) {
             spotReservations[reservation.parkingSpotId] = [];
@@ -208,49 +235,250 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
           child: isLoading
               ? const CircularProgressIndicator()
               : errorMessage != null
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.red[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error loading parking data',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.red[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          errorMessage!,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF64748B),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _loadData,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      children: [
-            
-                        if (spots.isEmpty) _buildEmptyState(),
-                        if (spots.isNotEmpty) ...[
-                          _buildParkingLot(),
-                        ],
-                      ],
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading parking data',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red[600],
+                      ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      errorMessage!,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF64748B),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadData,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    if (spots.isEmpty) _buildEmptyState(),
+                    if (spots.isNotEmpty) ...[
+                      _buildMapView(),
+                      const SizedBox(height: 20),
+                      _buildParkingLot(),
+                    ],
+                  ],
+                ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMapView() {
+    // Gather spots with valid coordinates
+    final spotsWithCoords = spots
+        .where((s) => s.latitude != null && s.longitude != null)
+        .toList();
+    if (spotsWithCoords.isEmpty) return const SizedBox.shrink();
+
+    // Calculate center
+    double avgLat =
+        spotsWithCoords.map((s) => s.latitude!).reduce((a, b) => a + b) /
+        spotsWithCoords.length;
+    double avgLng =
+        spotsWithCoords.map((s) => s.longitude!).reduce((a, b) => a + b) /
+        spotsWithCoords.length;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: _brownPrimary.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  _brownPrimary.withOpacity(0.15),
+                  _brownPrimary.withOpacity(0.05),
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.map_rounded, color: _brownPrimary, size: 22),
+                const SizedBox(width: 10),
+                Text(
+                  'Parking Spots Map',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: _brownPrimary,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF10B981),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Reserved',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _brownPrimary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _brownPrimary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Available',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: _brownPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Map
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+            child: SizedBox(
+              height: 350,
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: LatLng(avgLat, avgLng),
+                  initialZoom: 17.0,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.mosmartpark.desktop',
+                  ),
+                  MarkerLayer(
+                    markers: spotsWithCoords.map((spot) {
+                      bool hasReservation =
+                          spotReservationsMap.containsKey(spot.id) &&
+                          spotReservationsMap[spot.id]!.isNotEmpty;
+                      return Marker(
+                        point: LatLng(spot.latitude!, spot.longitude!),
+                        width: 32,
+                        height: 32,
+                        child: Tooltip(
+                          message:
+                              '${spot.parkingNumber} - ${hasReservation ? "Reserved" : "Available"}',
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: hasReservation
+                                  ? const Color(0xFF10B981)
+                                  : _brownPrimary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      (hasReservation
+                                              ? const Color(0xFF10B981)
+                                              : _brownPrimary)
+                                          .withOpacity(0.4),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                spot.parkingNumber.length > 1
+                                    ? spot.parkingNumber.substring(1)
+                                    : spot.parkingNumber,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -270,19 +498,12 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: _brownPrimary.withOpacity(0.3),
-          width: 1.5,
-        ),
+        border: Border.all(color: _brownPrimary.withOpacity(0.3), width: 1.5),
       ),
       child: Row(
         children: [
           IconButton(
-            icon: Icon(
-              Icons.chevron_left,
-              color: _brownPrimary,
-              size: 24,
-            ),
+            icon: Icon(Icons.chevron_left, color: _brownPrimary, size: 24),
             onPressed: displayIndex > 0
                 ? () {
                     final newIndex = displayIndex - 1;
@@ -309,11 +530,7 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
             ),
           ),
           IconButton(
-            icon: Icon(
-              Icons.chevron_right,
-              color: _brownPrimary,
-              size: 24,
-            ),
+            icon: Icon(Icons.chevron_right, color: _brownPrimary, size: 24),
             onPressed: displayIndex < zones.length - 1
                 ? () {
                     final newIndex = displayIndex + 1;
@@ -337,19 +554,12 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: _brownPrimary.withOpacity(0.3),
-          width: 1.5,
-        ),
+        border: Border.all(color: _brownPrimary.withOpacity(0.3), width: 1.5),
       ),
       child: Row(
         children: [
           IconButton(
-            icon: Icon(
-              Icons.chevron_left,
-              color: _brownPrimary,
-              size: 24,
-            ),
+            icon: Icon(Icons.chevron_left, color: _brownPrimary, size: 24),
             onPressed: () {
               setState(() {
                 selectedDate = selectedDate.subtract(const Duration(days: 1));
@@ -387,11 +597,7 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
             ),
           ),
           IconButton(
-            icon: Icon(
-              Icons.chevron_right,
-              color: _brownPrimary,
-              size: 24,
-            ),
+            icon: Icon(Icons.chevron_right, color: _brownPrimary, size: 24),
             onPressed: () {
               setState(() {
                 selectedDate = selectedDate.add(const Duration(days: 1));
@@ -445,10 +651,7 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
           const SizedBox(height: 8),
           Text(
             'This parking zone doesn\'t have any spots configured.',
-            style: TextStyle(
-              fontSize: 14,
-              color: const Color(0xFF64748B),
-            ),
+            style: TextStyle(fontSize: 14, color: const Color(0xFF64748B)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -508,20 +711,14 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                  
-                  
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           // Zone carousel
-                          Expanded(
-                            child: _buildZoneCarousel(),
-                          ),
+                          Expanded(child: _buildZoneCarousel()),
                           const SizedBox(width: 20),
                           // Date picker
-                          Expanded(
-                            child: _buildDatePicker(),
-                          ),
+                          Expanded(child: _buildDatePicker()),
                         ],
                       ),
                     ],
@@ -529,7 +726,7 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
                 ),
               ),
               // const SizedBox(height: 10),
-              
+
               // Parking spots grid
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -545,23 +742,25 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
 
   Widget _buildParkingRows() {
     var sortedRows = groupedSpots.keys.toList()..sort();
-    
+
     List<Widget> widgets = [];
     for (int i = 0; i < sortedRows.length; i++) {
-      widgets.add(_buildParkingRow(sortedRows[i], groupedSpots[sortedRows[i]]!));
-      
+      widgets.add(
+        _buildParkingRow(sortedRows[i], groupedSpots[sortedRows[i]]!),
+      );
+
       if (i < sortedRows.length - 1 && (i + 1) % 2 == 0) {
         int spotCount = groupedSpots[sortedRows[i]]!.length;
         widgets.add(_buildRoadSeparator(spotCount));
       }
     }
-    
+
     return Column(children: widgets);
   }
 
   Widget _buildRoadSeparator(int spotCount) {
     double roadWidth = (spotCount * 50) + ((spotCount - 1) * 8);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -686,7 +885,7 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
             ),
           ),
           const SizedBox(width: 16),
-          
+
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -696,7 +895,9 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
                   int index = entry.key;
                   ParkingSpot spot = entry.value;
                   return Padding(
-                    padding: EdgeInsets.only(right: index < rowSpots.length - 1 ? 8 : 0),
+                    padding: EdgeInsets.only(
+                      right: index < rowSpots.length - 1 ? 8 : 0,
+                    ),
                     child: _buildParkingSpot(spot),
                   );
                 }).toList(),
@@ -710,14 +911,18 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
 
   Widget _buildParkingSpot(ParkingSpot spot) {
     Color spotColor = _getSpotTypeColor(spot.parkingSpotTypeId);
-    String spotNumber = spot.parkingNumber.length > 1 ? spot.parkingNumber.substring(1) : spot.parkingNumber;
+    String spotNumber = spot.parkingNumber.length > 1
+        ? spot.parkingNumber.substring(1)
+        : spot.parkingNumber;
     List<Reservation> spotReservations = spotReservationsMap[spot.id] ?? [];
     bool hasReservation = spotReservations.isNotEmpty;
-    Color? carColor = hasReservation ? _parseColor(spotReservations.first.carColorHexCode) : null;
+    Color? carColor = hasReservation
+        ? _parseColor(spotReservations.first.carColorHexCode)
+        : null;
     bool isHovered = hoveredSpotId == spot.id;
-    
+
     return Tooltip(
-      message: hasReservation 
+      message: hasReservation
           ? '${spot.parkingNumber}\nReserved: ${spotReservations.length} reservation(s)\nClick to view details'
           : '${spot.parkingNumber}\nAvailable\nClick to view details',
       child: MouseRegion(
@@ -737,209 +942,212 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
             width: 50,
             height: 80,
             child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: hasReservation ? const Color(0xFF10B981) : const Color(0xFFE2E8F0), // Green for reserved
-                width: hasReservation ? 3 : 2,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: hasReservation
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFFE2E8F0), // Green for reserved
+                  width: hasReservation ? 3 : 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: hasReservation
+                        ? const Color(0xFF10B981).withOpacity(
+                            0.3,
+                          ) // Green shadow for reserved
+                        : Colors.black.withOpacity(0.1),
+                    blurRadius: hasReservation ? 8 : 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: hasReservation 
-                      ? const Color(0xFF10B981).withOpacity(0.3) // Green shadow for reserved
-                      : Colors.black.withOpacity(0.1),
-                  blurRadius: hasReservation ? 8 : 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Parking spot lines
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 2,
-                    color: const Color(0xFFCBD5E1),
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 2,
-                    color: const Color(0xFFCBD5E1),
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 2,
-                    color: const Color(0xFFCBD5E1),
-                  ),
-                ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 2,
-                    color: const Color(0xFFCBD5E1),
-                  ),
-                ),
-                // Corner markers
-                Positioned(
-                  top: 2,
-                  left: 2,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: const Color(0xFF94A3B8), width: 2),
-                        left: BorderSide(color: const Color(0xFF94A3B8), width: 2),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 2,
-                  right: 2,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: const Color(0xFF94A3B8), width: 2),
-                        right: BorderSide(color: const Color(0xFF94A3B8), width: 2),
-                      ),
-                    ),
-                  ),
-                ),
-                // Color indicator
-                Positioned(
-                  top: 6,
-                  left: 6,
-                  child: Container(
-                    width: 18,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: spotColor,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 2,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Car icon if reserved
-                if (hasReservation)
+              child: Stack(
+                children: [
+                  // Parking spot lines
                   Positioned(
-                    bottom: 8,
+                    top: 0,
                     left: 0,
                     right: 0,
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: carColor ?? Colors.grey,
-                          borderRadius: BorderRadius.circular(4),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.directions_car,
-                          color: Colors.white,
-                          size: 20,
+                    child: Container(height: 2, color: const Color(0xFFCBD5E1)),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(height: 2, color: const Color(0xFFCBD5E1)),
+                  ),
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(width: 2, color: const Color(0xFFCBD5E1)),
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(width: 2, color: const Color(0xFFCBD5E1)),
+                  ),
+                  // Corner markers
+                  Positioned(
+                    top: 2,
+                    left: 2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                            color: const Color(0xFF94A3B8),
+                            width: 2,
+                          ),
+                          left: BorderSide(
+                            color: const Color(0xFF94A3B8),
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                // Spot number
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        spotNumber,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: hasReservation ? Colors.white : const Color(0xFF1E293B),
-                          shadows: [
-                            Shadow(
-                              color: hasReservation 
-                                  ? Colors.black.withOpacity(0.8)
-                                  : Colors.black12,
-                              blurRadius: hasReservation ? 3 : 1,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
+                  Positioned(
+                    top: 2,
+                    right: 2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                            color: const Color(0xFF94A3B8),
+                            width: 2,
+                          ),
+                          right: BorderSide(
+                            color: const Color(0xFF94A3B8),
+                            width: 2,
+                          ),
                         ),
                       ),
-                      if (!spot.isActive)
-                        Container(
-                          margin: const EdgeInsets.only(top: 2),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.7),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: const Text(
-                            'X',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                    ],
-                ),
-              ),
-              // Highlight border when this spot is hovered
-              if (isHovered)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
+                    ),
+                  ),
+                  // Color indicator
+                  Positioned(
+                    top: 6,
+                    left: 6,
+                    child: Container(
+                      width: 18,
+                      height: 8,
+                      decoration: BoxDecoration(
                         color: spotColor,
-                        width: 3,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.white, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 2,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: spotColor.withOpacity(0.5),
-                          blurRadius: 8,
-                          spreadRadius: 2,
+                    ),
+                  ),
+                  // Car icon if reserved
+                  if (hasReservation)
+                    Positioned(
+                      bottom: 8,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: carColor ?? Colors.grey,
+                            borderRadius: BorderRadius.circular(4),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.directions_car,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
+                      ),
+                    ),
+                  // Spot number
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          spotNumber,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: hasReservation
+                                ? Colors.white
+                                : const Color(0xFF1E293B),
+                            shadows: [
+                              Shadow(
+                                color: hasReservation
+                                    ? Colors.black.withOpacity(0.8)
+                                    : Colors.black12,
+                                blurRadius: hasReservation ? 3 : 1,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!spot.isActive)
+                          Container(
+                            margin: const EdgeInsets.only(top: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: const Text(
+                              'X',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
-                ),
-            ],
+                  // Highlight border when this spot is hovered
+                  if (isHovered)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: spotColor, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: spotColor.withOpacity(0.5),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-          ),
-        ),
         ),
       ),
     );
@@ -949,15 +1157,17 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
     if (spotTypeId == null) {
       return const Color(0xFF6B7280);
     }
-    
+
     ParkingSpotType? spotType = spotTypesMap[spotTypeId];
     if (spotType == null) {
       return const Color(0xFF6B7280);
     }
-    
+
     String name = spotType.name.toLowerCase();
-    
-    if (name.contains('regular') || name.contains('standard') || name.contains('normal')) {
+
+    if (name.contains('regular') ||
+        name.contains('standard') ||
+        name.contains('normal')) {
       return const Color(0xFF10B981); // Green
     }
     if (name.contains('compact')) {
@@ -972,7 +1182,7 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
     if (name.contains('large')) {
       return const Color(0xFF8B5CF6); // Purple
     }
-    
+
     int hash = spotTypeId % 5;
     switch (hash) {
       case 0:
@@ -988,7 +1198,10 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
     }
   }
 
-  void _showReservationDetails(ParkingSpot spot, List<Reservation> reservations) {
+  void _showReservationDetails(
+    ParkingSpot spot,
+    List<Reservation> reservations,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1007,208 +1220,209 @@ class _ParkingWatchScreenState extends State<ParkingWatchScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.local_parking,
-                      color: _brownPrimary,
-                      size: 28,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Parking Spot ${spot.parkingNumber}',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: _brownPrimary,
+                  Row(
+                    children: [
+                      Icon(Icons.local_parking, color: _brownPrimary, size: 28),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Parking Spot ${spot.parkingNumber}',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: _brownPrimary,
+                          ),
                         ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Reservations for ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                if (reservations.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.event_available,
-                            size: 48,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No reservations for this date',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Reservations for ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF64748B),
                     ),
-                  )
-                else
-                  Flexible(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: reservations.length,
-                      itemBuilder: (context, index) {
-                        final reservation = reservations[index];
-                        final carColor = _parseColor(reservation.carColorHexCode);
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: carColor.withOpacity(0.3),
-                              width: 2,
+                  ),
+                  const SizedBox(height: 24),
+                  if (reservations.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.event_available,
+                              size: 48,
+                              color: Colors.grey[400],
                             ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: carColor,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.directions_car,
-                                      color: Colors.white,
-                                      size: 24,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${reservation.carBrandName ?? "Unknown"} ${reservation.carModel ?? ""}',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700,
-                                            color: Color(0xFF1E293B),
-                                          ),
-                                        ),
-                                        Text(
-                                          'License: ${reservation.carLicensePlate ?? "N/A"}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Color(0xFF64748B),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                            const SizedBox(height: 16),
+                            Text(
+                              'No reservations for this date',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
                               ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildReservationInfo(
-                                      Icons.person,
-                                      'User',
-                                      reservation.userFullName ?? "Unknown",
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: _buildReservationInfo(
-                                      Icons.event,
-                                      'Type',
-                                      reservation.reservationTypeName ?? "Unknown",
-                                    ),
-                                  ),
-                                ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: reservations.length,
+                        itemBuilder: (context, index) {
+                          final reservation = reservations[index];
+                          final carColor = _parseColor(
+                            reservation.carColorHexCode,
+                          );
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: carColor.withOpacity(0.3),
+                                width: 2,
                               ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildReservationInfo(
-                                      Icons.access_time,
-                                      'Start',
-                                      reservation.startDate != null
-                                          ? '${reservation.startDate!.day}/${reservation.startDate!.month}/${reservation.startDate!.year} ${reservation.startDate!.hour.toString().padLeft(2, '0')}:${reservation.startDate!.minute.toString().padLeft(2, '0')}'
-                                          : "N/A",
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: _buildReservationInfo(
-                                      Icons.access_time_filled,
-                                      'End',
-                                      reservation.endDate != null
-                                          ? '${reservation.endDate!.day}/${reservation.endDate!.month}/${reservation.endDate!.year} ${reservation.endDate!.hour.toString().padLeft(2, '0')}:${reservation.endDate!.minute.toString().padLeft(2, '0')}'
-                                          : "N/A",
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: _brownPrimary.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    const Text(
-                                      'Price:',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF1E293B),
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: carColor,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.directions_car,
+                                        color: Colors.white,
+                                        size: 24,
                                       ),
                                     ),
-                                    Text(
-                                      '\$${reservation.finalPrice.toStringAsFixed(2)}',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: _brownPrimary,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${reservation.carBrandName ?? "Unknown"} ${reservation.carModel ?? ""}',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF1E293B),
+                                            ),
+                                          ),
+                                          Text(
+                                            'License: ${reservation.carLicensePlate ?? "N/A"}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF64748B),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildReservationInfo(
+                                        Icons.person,
+                                        'User',
+                                        reservation.userFullName ?? "Unknown",
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: _buildReservationInfo(
+                                        Icons.event,
+                                        'Type',
+                                        reservation.reservationTypeName ??
+                                            "Unknown",
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildReservationInfo(
+                                        Icons.access_time,
+                                        'Start',
+                                        reservation.startDate != null
+                                            ? '${reservation.startDate!.day}/${reservation.startDate!.month}/${reservation.startDate!.year} ${reservation.startDate!.hour.toString().padLeft(2, '0')}:${reservation.startDate!.minute.toString().padLeft(2, '0')}'
+                                            : "N/A",
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: _buildReservationInfo(
+                                        Icons.access_time_filled,
+                                        'End',
+                                        reservation.endDate != null
+                                            ? '${reservation.endDate!.day}/${reservation.endDate!.month}/${reservation.endDate!.year} ${reservation.endDate!.hour.toString().padLeft(2, '0')}:${reservation.endDate!.minute.toString().padLeft(2, '0')}'
+                                            : "N/A",
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: _brownPrimary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Price:',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF1E293B),
+                                        ),
+                                      ),
+                                      Text(
+                                        '\$${reservation.finalPrice.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: _brownPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Close'),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
-                  ),
-                ),
                 ],
               ),
             ),
@@ -1288,4 +1502,3 @@ class _DashedLinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-

@@ -7,6 +7,8 @@ import 'package:mosmartpark_desktop/providers/parking_spot_provider.dart';
 import 'package:mosmartpark_desktop/providers/parking_spot_type_provider.dart';
 import 'package:mosmartpark_desktop/layouts/master_screen.dart';
 import 'package:mosmartpark_desktop/screens/parking_spot_edit_screen.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 // Brown color scheme matching the app
 const Color _brownPrimary = Color(0xFF8B6F47);
@@ -51,18 +53,21 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
       });
 
       // Load spot types first
-      final typesResult = await parkingSpotTypeProvider.get(filter: {"pageSize": 1000});
+      final typesResult = await parkingSpotTypeProvider.get(
+        filter: {"pageSize": 1000},
+      );
       setState(() {
         spotTypes = typesResult.items ?? [];
-        spotTypesMap = {for (var type in typesResult.items ?? []) type.id: type};
+        spotTypesMap = {
+          for (var type in typesResult.items ?? []) type.id: type,
+        };
       });
 
       // Load spots for this zone
-      final spotsResult = await parkingSpotProvider.get(filter: {
-        "parkingZoneId": widget.parkingZone.id,
-        "pageSize": 1000,
-      });
-      
+      final spotsResult = await parkingSpotProvider.get(
+        filter: {"parkingZoneId": widget.parkingZone.id, "pageSize": 1000},
+      );
+
       // Group spots by row (first letter of parking number)
       Map<String, List<ParkingSpot>> grouped = {};
       for (var spot in spotsResult.items ?? []) {
@@ -74,7 +79,7 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
           grouped[rowLetter]!.add(spot);
         }
       }
-      
+
       // Sort spots within each row by number
       for (var row in grouped.keys) {
         grouped[row]!.sort((a, b) {
@@ -108,49 +113,236 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
           child: isLoading
               ? const CircularProgressIndicator()
               : errorMessage != null
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading parking spots',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red[600],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      errorMessage!,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF64748B),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadSpots,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    if (spots.isEmpty) _buildEmptyState(),
+                    if (spots.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      _buildMapView(),
+                      const SizedBox(height: 20),
+                      _buildParkingLot(),
+                    ],
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMapView() {
+    final spotsWithCoords = spots
+        .where((s) => s.latitude != null && s.longitude != null)
+        .toList();
+    if (spotsWithCoords.isEmpty) {
+      return Container(
+        height: 300,
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.map_outlined, size: 48, color: Colors.grey[400]),
+              const SizedBox(height: 12),
+              Text(
+                'No spots with coordinates',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    double avgLat =
+        spotsWithCoords.map((s) => s.latitude!).reduce((a, b) => a + b) /
+        spotsWithCoords.length;
+    double avgLng =
+        spotsWithCoords.map((s) => s.longitude!).reduce((a, b) => a + b) /
+        spotsWithCoords.length;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: _brownPrimary.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header with legend
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  _brownPrimary.withOpacity(0.15),
+                  _brownPrimary.withOpacity(0.05),
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.map_rounded, color: _brownPrimary, size: 22),
+                const SizedBox(width: 10),
+                Text(
+                  'Zone Map View',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: _brownPrimary,
+                  ),
+                ),
+                const Spacer(),
+                ...spotTypes.map((type) {
+                  Color c = _getSpotTypeColor(type.id, type.name);
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.red[400],
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: c,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(width: 4),
                         Text(
-                          'Error loading parking spots',
+                          type.name,
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: Colors.red[600],
+                            color: c,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          errorMessage!,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF64748B),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _loadSpots,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        if (spots.isEmpty) _buildEmptyState(),
-                        if (spots.isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          _buildParkingLot(),
-                        ],
                       ],
                     ),
-        ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          // Map
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+            child: SizedBox(
+              height: 400,
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: LatLng(avgLat, avgLng),
+                  initialZoom: 17.5,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.mosmartpark.desktop',
+                  ),
+                  MarkerLayer(
+                    markers: spotsWithCoords.map((spot) {
+                      Color spotColor = _getSpotTypeColor(
+                        spot.parkingSpotTypeId,
+                        spot.parkingSpotTypeName,
+                      );
+                      return Marker(
+                        point: LatLng(spot.latitude!, spot.longitude!),
+                        width: 34,
+                        height: 34,
+                        child: GestureDetector(
+                          onTap: () => _editSpot(spot),
+                          child: Tooltip(
+                            message:
+                                '${spot.parkingNumber} (${spot.parkingSpotTypeName})\nClick to edit',
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: spotColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: spotColor.withOpacity(0.4),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  spot.parkingNumber.length > 1
+                                      ? spot.parkingNumber.substring(1)
+                                      : spot.parkingNumber,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -196,10 +388,7 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
           const SizedBox(height: 8),
           Text(
             'This parking zone doesn\'t have any spots configured.',
-            style: TextStyle(
-              fontSize: 14,
-              color: const Color(0xFF64748B),
-            ),
+            style: TextStyle(fontSize: 14, color: const Color(0xFF64748B)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -229,11 +418,7 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.legend_toggle_rounded,
-                color: _brownPrimary,
-                size: 18,
-              ),
+              Icon(Icons.legend_toggle_rounded, color: _brownPrimary, size: 18),
               const SizedBox(width: 8),
               Text(
                 'Spot Types (hover to display all spots of this type)',
@@ -249,7 +434,9 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
           Wrap(
             spacing: 12,
             runSpacing: 8,
-            children: spotTypes.map((spotType) => _buildLegendItem(spotType)).toList(),
+            children: spotTypes
+                .map((spotType) => _buildLegendItem(spotType))
+                .toList(),
           ),
         ],
       ),
@@ -259,7 +446,7 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
   Widget _buildLegendItem(ParkingSpotType spotType) {
     Color spotColor = _getSpotTypeColor(spotType.id, spotType.name);
     bool isHovered = hoveredSpotTypeId == spotType.id;
-    
+
     return MouseRegion(
       onEnter: (_) {
         setState(() {
@@ -286,7 +473,7 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: isHovered 
+                  color: isHovered
                       ? spotColor.withOpacity(0.5)
                       : Colors.black.withOpacity(0.2),
                   blurRadius: isHovered ? 6 : 2,
@@ -400,7 +587,7 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              
+
               // Parking spots grid
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -409,13 +596,9 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
               const SizedBox(height: 20),
             ],
           ),
-          
+
           // Legend positioned at top right
-          Positioned(
-            top: 20,
-            right: 20,
-            child: _buildLegend(),
-          ),
+          Positioned(top: 20, right: 20, child: _buildLegend()),
         ],
       ),
     );
@@ -424,11 +607,13 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
   Widget _buildParkingRows() {
     // Sort rows alphabetically (A, B, C, etc.)
     var sortedRows = groupedSpots.keys.toList()..sort();
-    
+
     List<Widget> widgets = [];
     for (int i = 0; i < sortedRows.length; i++) {
-      widgets.add(_buildParkingRow(sortedRows[i], groupedSpots[sortedRows[i]]!));
-      
+      widgets.add(
+        _buildParkingRow(sortedRows[i], groupedSpots[sortedRows[i]]!),
+      );
+
       // Add road separator between every two rows (after B, D, F, etc.)
       if (i < sortedRows.length - 1 && (i + 1) % 2 == 0) {
         // Calculate road width based on the spots in the previous row
@@ -436,7 +621,7 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
         widgets.add(_buildRoadSeparator(spotCount));
       }
     }
-    
+
     return Column(children: widgets);
   }
 
@@ -444,7 +629,7 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
     // Calculate road width: spot width (50) + spacing (8) for each spot
     // Road should match the width of the spots area only
     double roadWidth = (spotCount * 50) + ((spotCount - 1) * 8);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -576,7 +761,7 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
             ),
           ),
           const SizedBox(width: 16),
-          
+
           // Parking spots in this row
           Expanded(
             child: SingleChildScrollView(
@@ -587,7 +772,9 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
                   int index = entry.key;
                   ParkingSpot spot = entry.value;
                   return Padding(
-                    padding: EdgeInsets.only(right: index < rowSpots.length - 1 ? 8 : 0),
+                    padding: EdgeInsets.only(
+                      right: index < rowSpots.length - 1 ? 8 : 0,
+                    ),
                     child: _buildParkingSpot(spot),
                   );
                 }).toList(),
@@ -600,13 +787,21 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
   }
 
   Widget _buildParkingSpot(ParkingSpot spot) {
-    Color spotColor = _getSpotTypeColor(spot.parkingSpotTypeId, spot.parkingSpotTypeName);
-    String spotNumber = spot.parkingNumber.length > 1 ? spot.parkingNumber.substring(1) : spot.parkingNumber;
+    Color spotColor = _getSpotTypeColor(
+      spot.parkingSpotTypeId,
+      spot.parkingSpotTypeName,
+    );
+    String spotNumber = spot.parkingNumber.length > 1
+        ? spot.parkingNumber.substring(1)
+        : spot.parkingNumber;
     bool isHovered = hoveredSpotId == spot.id;
-    bool isTypeHovered = hoveredSpotTypeId != null && spot.parkingSpotTypeId == hoveredSpotTypeId;
-    
+    bool isTypeHovered =
+        hoveredSpotTypeId != null &&
+        spot.parkingSpotTypeId == hoveredSpotTypeId;
+
     return Tooltip(
-      message: '${spot.parkingNumber}\nType: ${spot.parkingSpotTypeName}\n${spot.isActive ? "Available" : "Unavailable"}\nClick to edit',
+      message:
+          '${spot.parkingNumber}\nType: ${spot.parkingSpotTypeName}\n${spot.isActive ? "Available" : "Unavailable"}\nClick to edit',
       child: MouseRegion(
         onEnter: (_) {
           setState(() {
@@ -624,210 +819,204 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
             width: 50,
             height: 80,
             child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: const Color(0xFFE2E8F0),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              // Parking spot lines (like real parking spaces)
-              // Top line
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 2,
-                  color: const Color(0xFFCBD5E1),
-                ),
-              ),
-              // Bottom line
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 2,
-                  color: const Color(0xFFCBD5E1),
-                ),
-              ),
-              // Left line
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: Container(
-                  width: 2,
-                  color: const Color(0xFFCBD5E1),
-                ),
-              ),
-              // Right line
-              Positioned(
-                right: 0,
-                top: 0,
-                bottom: 0,
-                child: Container(
-                  width: 2,
-                  color: const Color(0xFFCBD5E1),
-                ),
-              ),
-              // Diagonal corner markers (like parking space corners)
-              Positioned(
-                top: 2,
-                left: 2,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(color: const Color(0xFF94A3B8), width: 2),
-                      left: BorderSide(color: const Color(0xFF94A3B8), width: 2),
-                    ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0xFFE2E8F0), width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
-                ),
+                ],
               ),
-              Positioned(
-                top: 2,
-                right: 2,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(color: const Color(0xFF94A3B8), width: 2),
-                      right: BorderSide(color: const Color(0xFF94A3B8), width: 2),
-                    ),
+              child: Stack(
+                children: [
+                  // Parking spot lines (like real parking spaces)
+                  // Top line
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(height: 2, color: const Color(0xFFCBD5E1)),
                   ),
-                ),
-              ),
-              // Color indicator (top left corner) - rectangular and larger
-              Positioned(
-                top: 6,
-                left: 6,
-                child: Container(
-                  width: 18,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: spotColor,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 2,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
+                  // Bottom line
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(height: 2, color: const Color(0xFFCBD5E1)),
                   ),
-                ),
-              ),
-              // Highlight border when this spot type is hovered in legend or this specific spot is hovered
-              if (isTypeHovered || isHovered)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: spotColor,
-                        width: 3,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: spotColor.withOpacity(0.5),
-                          blurRadius: 8,
-                          spreadRadius: 2,
+                  // Left line
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(width: 2, color: const Color(0xFFCBD5E1)),
+                  ),
+                  // Right line
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(width: 2, color: const Color(0xFFCBD5E1)),
+                  ),
+                  // Diagonal corner markers (like parking space corners)
+                  Positioned(
+                    top: 2,
+                    left: 2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                            color: const Color(0xFF94A3B8),
+                            width: 2,
+                          ),
+                          left: BorderSide(
+                            color: const Color(0xFF94A3B8),
+                            width: 2,
+                          ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              // Spot number
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      spotNumber,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF1E293B),
-                        shadows: [
-                          Shadow(
-                            color: Colors.black12,
-                            blurRadius: 1,
-                            offset: Offset(0, 1),
+                  Positioned(
+                    top: 2,
+                    right: 2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                            color: const Color(0xFF94A3B8),
+                            width: 2,
+                          ),
+                          right: BorderSide(
+                            color: const Color(0xFF94A3B8),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Color indicator (top left corner) - rectangular and larger
+                  Positioned(
+                    top: 6,
+                    left: 6,
+                    child: Container(
+                      width: 18,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: spotColor,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.white, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 2,
+                            offset: const Offset(0, 1),
                           ),
                         ],
                       ),
                     ),
-                    if (!spot.isActive)
-                      Container(
-                        margin: const EdgeInsets.only(top: 2),
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  ),
+                  // Highlight border when this spot type is hovered in legend or this specific spot is hovered
+                  if (isTypeHovered || isHovered)
+                    Positioned.fill(
+                      child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.7),
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: spotColor, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: spotColor.withOpacity(0.5),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
                         ),
-                        child: const Text(
-                          'X',
-                          style: TextStyle(
-                            fontSize: 12,
+                      ),
+                    ),
+                  // Spot number
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          spotNumber,
+                          style: const TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                            color: Color(0xFF1E293B),
+                            shadows: [
+                              Shadow(
+                                color: Colors.black12,
+                                blurRadius: 1,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              ),
-              // Edit indicator
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  width: 18,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(9),
-                    border: Border.all(
-                      color: const Color(0xFFCBD5E1),
-                      width: 1.5,
+                        if (!spot.isActive)
+                          Container(
+                            margin: const EdgeInsets.only(top: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: const Text(
+                              'X',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 2,
-                        offset: const Offset(0, 1),
+                  ),
+                  // Edit indicator
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(9),
+                        border: Border.all(
+                          color: const Color(0xFFCBD5E1),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 2,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
                       ),
-                    ],
+                      child: const Icon(
+                        Icons.edit,
+                        size: 11,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.edit,
-                    size: 11,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-          ),
-        ),
         ),
       ),
     );
@@ -837,35 +1026,37 @@ class _ParkingSpotListScreenState extends State<ParkingSpotListScreen> {
     if (spotTypeId == null) {
       return const Color(0xFF6B7280); // Default gray
     }
-    
+
     // Check spot type name for special cases
     String name = (spotTypeName ?? '').toLowerCase();
-    
+
     // Green for regular
-    if (name.contains('regular') || name.contains('standard') || name.contains('normal')) {
+    if (name.contains('regular') ||
+        name.contains('standard') ||
+        name.contains('normal')) {
       return const Color(0xFF10B981); // Green
     }
-    
+
     // Red for compact
     if (name.contains('compact')) {
       return const Color(0xFFEF4444); // Red
     }
-    
+
     // Orange for electric
     if (name.contains('electric')) {
       return const Color(0xFFF59E0B); // Orange
     }
-    
+
     // Blue for disabled
     if (name.contains('disabled') || name.contains('handicap')) {
       return const Color(0xFF3B82F6); // Blue
     }
-    
+
     // Purple for large
     if (name.contains('large')) {
       return const Color(0xFF8B5CF6); // Purple
     }
-    
+
     // Default: Use a hash of the ID to consistently assign colors
     // Green - regular, Red - compact, Orange - electric, Blue - disabled, Purple - large
     int hash = spotTypeId % 5;

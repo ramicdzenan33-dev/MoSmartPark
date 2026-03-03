@@ -382,16 +382,16 @@ namespace MoSmartPark.Services.Database
             // Row B: B1-B2 (Electric next to each other), B3-B10 (Regular)
             // Row C: C1-C3 (Compact), C4-C7 (Regular), C8-C10 (Large)
             // Row D: D1-D9 (Regular), D10 (Disabled corner)
-            // Coordinates: Sarajevo area (~43.856°N, 18.413°E)
+            // Coordinates: Mostar area (~43.343°N, 17.808°E)
             var allSpots = new List<ParkingSpot>();
             int spotId = 1;
 
-            // Zone 1 base coordinates (North Wing - near BBI Centar, Sarajevo)
-            double zone1BaseLat = 43.8563;
-            double zone1BaseLng = 18.4131;
+            // Zone 1 base coordinates (North Wing - near Španjolski Trg, Mostar)
+            double zone1BaseLat = 43.3430;
+            double zone1BaseLng = 17.8078;
             // Zone 2 base coordinates (South Wing - offset ~200m south)
-            double zone2BaseLat = 43.8545;
-            double zone2BaseLng = 18.4131;
+            double zone2BaseLat = 43.3412;
+            double zone2BaseLng = 17.8078;
 
             // Row offsets (A=0, B=1, C=2, D=3) - each row ~15m apart
             double rowOffset = 0.00013; // ~15m in latitude
